@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------
+   BASE OVERRIDES (v3-safe)
+--------------------------------*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: theme('colors.gray.200');
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  body {
+    @apply relative text-base font-normal font-outfit z-1 bg-gray-50 text-gray-900 dark:bg-[#212121] dark:text-slate-100;
+    }
+}
+
+/* ------------------------------
+   MENU UTILITIES (converted from @utility)
+--------------------------------*/
+@layer components {
+  .menu-item {
+    @apply relative flex items-center gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  }
+
+  .menu-item-active {
+    @apply bg-sidebarActive-50 text-sidebarActive-500
+            dark:bg-sidebarActive-500/10 dark:text-sidebarActive-500;
+  }
+
+  .menu-item-inactive {
+    @apply text-gray-700 hover:bg-gray-100 hover:text-gray-900
+            dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white;
+  }
+
+  .menu-item-icon-active {
+    @apply fill-brand-500 dark:fill-brand-400;
+  }
+
+  .menu-item-icon-inactive {
+    @apply fill-gray-500 group-hover:fill-gray-700
+           dark:fill-gray-400 dark:group-hover:fill-gray-300;
+  }
+
+  .menu-item-arrow {
+    @apply absolute top-1/2 right-2.5 -translate-y-1/2;
+  }
+
+  .menu-item-arrow-active {
+    @apply rotate-180 stroke-brand-500 dark:stroke-brand-400;
+  }
+
+  .menu-item-arrow-inactive {
+    @apply stroke-gray-500 group-hover:stroke-gray-700
+           dark:stroke-gray-400 dark:group-hover:stroke-gray-300;
+  }
+
+  .menu-dropdown-item {
+    @apply text-theme-sm relative flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium;
+  }
+
+  .menu-dropdown-item-active {
+    @apply bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-400;
+  }
+
+  .menu-dropdown-item-inactive {
+    @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+  }
+
+  .menu-dropdown-badge {
+    @apply text-brand-500 dark:text-brand-400 block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase;
+  }
+
+  .menu-dropdown-badge-active {
+    @apply bg-brand-100 dark:bg-brand-500/20;
+  }
+
+  .menu-dropdown-badge-inactive {
+    @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
+  }
+}
+
+/* ------------------------------
+   EXTRA UTILITIES
+--------------------------------*/
+@layer utilities {
+  /* No scrollbar */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #344054;
+  }
+
+  /* Remove date/time icons */
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="time"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
+}
+
+/* ------------------------------
+   SIDEBAR HOVER BEHAVIOR
+--------------------------------*/
+/*
+.sidebar:hover { width: 290px; }
+.sidebar:hover .logo { display: block; }
+.sidebar:hover .logo-icon { display: none; }
+.sidebar:hover .sidebar-header { justify-content: space-between; }
+.sidebar:hover .menu-group-title { display: block; }
+.sidebar:hover .menu-group-icon { display: none; }
+.sidebar:hover .menu-item-text { display: inline; }
+.sidebar:hover .menu-item-arrow { display: block; }
+.sidebar:hover .menu-dropdown { display: flex; }
+*/
+/* ------------------------------
+   CHECKBOX / TABLE STYLES
+--------------------------------*/
+.tableCheckbox:checked ~ span span {
+  @apply opacity-100;
+}
+.tableCheckbox:checked ~ span {
+  @apply border-brand-500 bg-brand-500;
+}
+
+/* react-select dark mode – ChatGPT-style */
+.dark .rs__control {
+  background: #171717;          /* main dark background */
+  border-color: #9b9b9b38;        /* deep border */
+}
+
+.dark .rs__single-value,
+.dark .rs__input-container {
+  color: #e2e8f0;               /* light text */
+}
+
+.dark .rs__menu {
+  background: #171717;          /* dropdown matches background */
+}
+
+.dark .rs__option {
+  color: #e2e8f0;               /* option text */
+}
+
+.dark .rs__option--is-focused {
+  background: #212121;          /* subtle highlight (panel color) */
+}
