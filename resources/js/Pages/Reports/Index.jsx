@@ -116,7 +116,7 @@ export default function ReportsIndex() {
             render: (r) => (
             <div className="leading-tight">
                 <div className="font-medium">{r.name}</div>
-                <div className="text-xs text-gpt-400">
+                <div className="text-xs text-gray-400">
                 {r.sku} • {r.barcode}
                 </div>
             </div>
@@ -149,7 +149,7 @@ export default function ReportsIndex() {
         render: (r) => (
           <div className="leading-tight">
             <div className="font-medium">{r.product?.name}</div>
-            <div className="text-xs text-gpt-400">
+            <div className="text-xs text-gray-400">
               {r.product?.sku} • {r.product?.barcode}
             </div>
           </div>
@@ -354,13 +354,13 @@ export default function ReportsIndex() {
       {activeTab !== "inventory" && (
         <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="rounded-lg border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-3">
-            <div className="text-xs text-gpt-400 dark:text-gpt-400">Total Qty</div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">Total Qty</div>
             <div className="text-lg font-semibold">{totals.qty ?? 0}</div>
             </div>
 
             {(activeTab === "sales_in" || activeTab === "sales_out") && (
             <div className="rounded-lg border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-3">
-                <div className="text-xs text-gpt-400 dark:text-gpt-400">Total Amount</div>
+                <div className="text-xs text-gray-400 dark:text-gpt-400">Total Amount</div>
                 <div className="text-lg font-semibold">
                 ₱{money(totals.amount ?? 0)}
                 </div>
@@ -372,24 +372,24 @@ export default function ReportsIndex() {
         {activeTab === "inventory" && (
         <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="rounded-lg border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-3">
-            <div className="text-xs text-gpt-400 dark:text-gpt-400">Total Products</div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">Total Products</div>
             <div className="text-lg font-semibold">{totals.total_products ?? 0}</div>
             </div>
 
             <div className="rounded-lg border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-3">
-            <div className="text-xs text-gpt-400 dark:text-gpt-400">Total Remaining Qty</div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">Total Remaining Qty</div>
             <div className="text-lg font-semibold">{totals.remaining_qty ?? 0}</div>
             </div>
 
             <div className="rounded-lg border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-3">
-            <div className="text-xs text-gpt-400 dark:text-gpt-400">Total Inventory Value</div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">Total Inventory Value</div>
             <div className="text-lg font-semibold">
                 ₱{money(totals.inventory_value ?? 0)}
             </div>
             </div>
 
             <div className="rounded-lg border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-3">
-            <div className="text-xs text-gpt-400 dark:text-gpt-400">Value @ Sales Price</div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">Value @ Sales Price</div>
             <div className="text-lg font-semibold">
                 ₱{money(totals.inventory_value_sales ?? 0)}
             </div>

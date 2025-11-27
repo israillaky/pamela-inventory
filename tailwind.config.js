@@ -113,7 +113,7 @@ export default {
                     100: "#e2e8f0", // main text
                     200: "#eeeeee",
                     300: "#dfdfdf", // muted text
-                    400: "#6b7280", // disabled text
+                    400: "#dfdfdf", // disabled text
                     500: "#475569",
                     600: "#1d263b", // borders
                     700: "#9b9b9b38", // raised surface

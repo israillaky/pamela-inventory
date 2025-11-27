@@ -71,7 +71,7 @@ function KpiCard({ title, value, icon: Icon, href, subtitle }) {
           <Icon className="text-sidebarActive-500" size={20} />
         </div>
 
-        <div className="text-xs text-gpt-400 dark:text-gpt-400 group-hover:text-sidebarActive-500 transition">
+        <div className="text-xs text-gray-400 dark:text-gpt-400 group-hover:text-sidebarActive-500 transition">
           View report →
         </div>
       </div>
@@ -83,7 +83,7 @@ function KpiCard({ title, value, icon: Icon, href, subtitle }) {
         </div>
 
         {subtitle && (
-          <div className="mt-1 text-xs text-gpt-400 dark:text-gpt-400">
+          <div className="mt-1 text-xs text-gray-400 dark:text-gpt-400">
             {subtitle}
           </div>
         )}

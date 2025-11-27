@@ -280,7 +280,7 @@ export default function StockInIndex() {
             <div className="font-medium text-gpt-900 dark:text-gpt-100">
               {r.product?.name || "—"}
             </div>
-            <div className="text-xs text-gpt-400 dark:text-gpt-400">
+            <div className="text-xs text-gray-400 dark:text-gpt-400">
               {r.product?.sku} • {r.product?.barcode}
             </div>
           </div>
@@ -443,7 +443,7 @@ export default function StockInIndex() {
                       <div className="font-medium text-gpt-900 dark:text-gpt-100">
                         {p.name}
                       </div>
-                      <div className="text-xs text-gpt-400 dark:text-gpt-400">
+                      <div className="text-xs text-gray-400 dark:text-gpt-400">
                         SKU: {p.sku} • BAR: {p.barcode}
                       </div>
                     </button>

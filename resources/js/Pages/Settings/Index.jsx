@@ -58,7 +58,7 @@ export default function SettingsIndex() {
                 alt="Current logo"
                 className="h-14 w-auto rounded-lg shadow bg-gpt-100 dark:bg-gpt-800 p-1"
               />
-              <p className="text-xs text-gpt-400 dark:text-gpt-400">
+              <p className="text-xs text-gray-400 dark:text-gpt-400">
                 This image is also used as the favicon.
               </p>
             </div>

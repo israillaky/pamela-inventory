@@ -20,7 +20,7 @@ export default function SystemError({ message }) {
               "Something went wrong with the system. Please contact your developer."}
           </p>
 
-          <p className="mb-6 text-xs text-gpt-400 dark:text-gpt-400">
+          <p className="mb-6 text-xs text-gray-400 dark:text-gpt-400">
             This issue has been recorded in the system logs.
           </p>
 
