@@ -7,6 +7,20 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## pamela-inventory
+
+Laravel 11 + Inertia + React inventory management system with:
+
+- Products, Brands, Categories, Child Categories
+- Stock In / Stock Out with computed quantity
+- Barcode generation for products
+- Audit Logs (activity tracking)
+- Role-based access (admin, staff, warehouse_manager, cashier)
+- Global Settings (company name + logo)
+- Custom Tailwind admin layout (sidebar + topbar)
+- WAMP + LAN support (local network deployment)
+
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
