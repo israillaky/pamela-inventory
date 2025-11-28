@@ -282,13 +282,12 @@ export default function StockOutIndex() {
 
   const getUnitSalesPrice = (r) => {
     const fromSnapshot =
-      r.price_snapshot?.unit_sales_price ??
-      r.product_price_snapshot?.unit_sales_price ??
-      null;
+        r.price_snapshot?.unit_sales_price ??
+        r.product_price_snapshot?.unit_sales_price ??
+        null;
 
-    const fromProduct = r.product?.sales_price ?? null;
-
-    const raw = fromSnapshot ?? fromProduct;
+    // ❌ no fallback to r.product?.sales_price here
+    const raw = fromSnapshot;
     if (raw == null) return null;
 
     const n = Number(raw);
