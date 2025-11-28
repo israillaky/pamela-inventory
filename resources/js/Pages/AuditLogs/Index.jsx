@@ -212,7 +212,7 @@ export default function AuditLogsIndex() {
       </div>
 
       {/* Table card */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-4">
+      <div className="rounded-t-md border-b-1 border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-4">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
@@ -291,7 +291,7 @@ export default function AuditLogsIndex() {
         </div>
 
         {paginationLinks.length > 0 && (
-            <div className="mt-4">
+            <div className="mb-4">
                 <Pagination links={paginationLinks} />
             </div>
         )}

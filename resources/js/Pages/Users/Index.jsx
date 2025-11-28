@@ -6,6 +6,7 @@ import Modal from "@/Components/ui/Modal";
 import Button from "@/Components/ui/Button";
 import TextInput from "@/Components/ui/TextInput";
 import Pagination from "@/Components/ui/Pagination";
+import { Pencil, Trash } from "lucide-react";
 
 export default function UsersIndex() {
   const { users, roles = [], filters = {} } = usePage().props;
@@ -87,9 +88,9 @@ export default function UsersIndex() {
       </div>
 
       {/* Plain table (no custom Table component) */}
-      <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 shadow-theme-xs">
+      <div className="overflow-x-auto   rounded-t-lg border border-b-1 border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 shadow-theme-xs">
         <table className="min-w-full text-sm">
-          <thead className="bg-gpt-50 dark:bg-gpt-800/60 text-gpt-600 dark:text-gpt-300">
+          <thead className="bg-gpt-50 dark:bg-gpt-900 text-gpt-600 dark:text-gpt-300">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Name</th>
               <th className="px-4 py-3 text-left font-medium">Username</th>
@@ -109,7 +110,7 @@ export default function UsersIndex() {
             )}
 
             {(users?.data || []).map((u) => (
-              <tr key={u.id} className="hover:bg-gpt-50 dark:hover:bg-gpt-800/40">
+              <tr key={u.id} className="border-t border-gray-100 dark:border-gpt-700 odd:bg-gpt-50 even:bg-white dark:odd:bg-gpt-700 dark:even:bg-gpt-900/80">
                 <td className="px-4 py-3">{u.name}</td>
                 <td className="px-4 py-3">{u.username}</td>
                 <td className="px-4 py-3">{u.email || "-"}</td>
@@ -120,12 +121,14 @@ export default function UsersIndex() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => openEdit(u)}>
-                      Edit
+                    <Button size="sm" variant="outline" onClick={() => openEdit(u)} className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30">
+                        <Pencil size={16} />
                     </Button>
-                    <Button size="sm" variant="danger" onClick={() => removeUser(u)}>
-                      Delete
+                    <Button size="sm" variant="outline" onClick={() => removeUser(u)}    className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30">
+                      <Trash size={16} />
                     </Button>
+
+
                   </div>
                 </td>
               </tr>
@@ -135,8 +138,8 @@ export default function UsersIndex() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-4">
-        <Pagination links={users?.links || []} />
+      <div className="mb-4">
+        <Pagination meta={users} />
       </div>
 
       {/* Modal */}

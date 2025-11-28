@@ -10,6 +10,7 @@ import Pagination from "@/Components/ui/Pagination";
 import Modal from "@/Components/ui/Modal";
 import BarcodePreview from "@/Components/ui/BarcodePreview";
 import Table from "@/Components/ui/Table";
+import { Pencil,Trash } from "lucide-react";
 
 export default function ProductsIndex() {
   const {
@@ -170,13 +171,13 @@ export default function ProductsIndex() {
     },
     {
       key: "price",
-      label: "Price",
+      label: "ProductPrice",
       align: "right",
       render: (p) => `₱${p.price}`,
     },
     {
       key: "sales_price",
-      label: "Sales",
+      label: "Product Sales Price",
       align: "right",
       render: (p) => (p.sales_price ? `₱${p.sales_price}` : "-"),
     },
@@ -209,7 +210,16 @@ export default function ProductsIndex() {
             </span>
             );
         },
-        },
+    },
+
+    {
+        key: "created_at",
+        label: "Created At",
+        align: "right",
+        render: (p) => (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'  }) : "-"), // format date
+    },
+
+
 
     {
       key: "actions",
@@ -220,18 +230,18 @@ export default function ProductsIndex() {
           <Button
             variant="outline"
             type="button"
-            className="px-3 py-1"
+            className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30"
             onClick={() => openEdit(p)}
           >
-            Edit
+            <Pencil size={16} />
           </Button>
           <Button
-            variant="danger"
+            variant="outline"
             type="button"
-            className="px-3 py-1"
+            className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
             onClick={() => destroy(p.id)}
           >
-            Delete
+            <Trash size={16} />
           </Button>
         </div>
       ),
@@ -296,8 +306,9 @@ export default function ProductsIndex() {
             if (qty < 10) return "bg-amber-50 dark:bg-amber-900/20";
             return "";
         }} />
-
-      <Pagination links={products?.links || []} />
+      <div className="mb-4">
+        <Pagination meta={products} />
+      </div>
 
       {/* ADD MODAL */}
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Product">

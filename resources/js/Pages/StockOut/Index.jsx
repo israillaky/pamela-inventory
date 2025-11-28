@@ -7,15 +7,19 @@ import TextInput from "@/Components/ui/TextInput";
 import Button from "@/Components/ui/Button";
 import Table from "@/Components/ui/Table";
 import Pagination from "@/Components/ui/Pagination";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 
 export default function StockOutIndex() {
-  const { stockOuts, flash } = usePage().props;
+  const { stockOuts, flash, rangeTotals = {} } = usePage().props;
 
   /* ---------------------------
       Toast + Beep
   ----------------------------*/
-  const [toast, setToast] = useState({ show: false, type: "info", message: "" });
+  const [toast, setToast] = useState({
+    show: false,
+    type: "info",
+    message: "",
+  });
   const toastTimerRef = useRef(null);
 
   const showToast = (message, type = "info") => {
@@ -108,12 +112,12 @@ export default function StockOutIndex() {
         setOpenSuggest(true);
         setHighlight(0);
 
-        const q = query.trim().toLowerCase();
+        const qLower = query.trim().toLowerCase();
         if (list.length === 1) {
           const p = list[0];
           const isExact =
-            String(p.barcode || "").toLowerCase() === q ||
-            String(p.sku || "").toLowerCase() === q;
+            String(p.barcode || "").toLowerCase() === qLower ||
+            String(p.sku || "").toLowerCase() === qLower;
 
           if (isExact) {
             selectProduct(p);
@@ -235,7 +239,7 @@ export default function StockOutIndex() {
   };
 
   /* ---------------------------
-      Inline edit existing rows (ONLY via icon)
+      Inline edit existing rows
   ----------------------------*/
   const updateQty = (row, qty) => {
     router.put(
@@ -255,12 +259,97 @@ export default function StockOutIndex() {
     router.delete(route("stock-out.destroy", id), { preserveScroll: true });
   };
 
-  // NEW: edit state (input only shows after clicking edit icon)
   const [editingQtyId, setEditingQtyId] = useState(null);
   const [draftQty, setDraftQty] = useState({});
 
   const rows = stockOuts?.data || [];
 
+  /* ---------------------------
+      Pricing helpers (snapshot-aware)
+  ----------------------------*/
+  const getUnitPrice = (r) => {
+    const fromSnapshot =
+      r.price_snapshot?.unit_price ??
+      r.product_price_snapshot?.unit_price ??
+      null;
+
+    const fromProduct = r.product?.price ?? null;
+
+    const raw = fromSnapshot ?? fromProduct ?? 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const getUnitSalesPrice = (r) => {
+    const fromSnapshot =
+      r.price_snapshot?.unit_sales_price ??
+      r.product_price_snapshot?.unit_sales_price ??
+      null;
+
+    const fromProduct = r.product?.sales_price ?? null;
+
+    const raw = fromSnapshot ?? fromProduct;
+    if (raw == null) return null;
+
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const formatMoney = (value) => {
+    if (!Number.isFinite(value)) return "—";
+    if (value <= 0) return "—";
+
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const formatMoneyTotal = (value) => {
+    if (!Number.isFinite(value)) value = 0;
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  /* ---------------------------
+      PAGE totals (sale vs non-sale)
+  ----------------------------*/
+  const pageTotals = useMemo(() => {
+    let saleSubtotal = 0; // rows with sale price
+    let regularSubtotal = 0; // rows without sale price
+    let totalQty = 0; // 👈 NEW
+    rows.forEach((r) => {
+      const qty = Number(r.quantity || 0);
+      if (qty <= 0) return;
+
+      totalQty += qty; // 👈 NEW
+
+      const unitPrice = getUnitPrice(r);
+      const unitSales = getUnitSalesPrice(r);
+
+      const hasSale =
+        unitSales != null &&
+        Number.isFinite(unitSales) &&
+        unitSales > 0 &&
+        unitSales !== unitPrice;
+
+      if (hasSale) {
+        saleSubtotal += qty * unitSales;
+      } else {
+        regularSubtotal += qty * unitPrice;
+      }
+    });
+
+    const finalTotal = saleSubtotal + regularSubtotal;
+
+    return { saleSubtotal, regularSubtotal, finalTotal, totalQty }; // 👈 include
+  }, [rows]);
+
+  /* ---------------------------
+      Columns
+  ----------------------------*/
   const columns = useMemo(
     () => [
       {
@@ -309,12 +398,69 @@ export default function StockOutIndex() {
         },
       },
       {
-        key: "timestamp",
-        label: "Date",
-        render: (r) =>
-          new Date(r.timestamp || r.created_at).toLocaleString(),
+        key: "price",
+        label: "Price",
+        align: "right",
+        render: (r) => {
+          const unitPrice = getUnitPrice(r);
+          const unitSales = getUnitSalesPrice(r);
+
+          const hasSale =
+            unitSales != null &&
+            Number.isFinite(unitSales) &&
+            unitSales > 0 &&
+            unitSales !== unitPrice;
+
+          if (hasSale) {
+            return (
+              <div className="text-right text-sm">
+                <div className="text-xs text-gray-400 line-through">
+                  ₱ {formatMoney(unitPrice)}
+                </div>
+                <div className="font-semibold text-emerald-500">
+                  ₱ {formatMoney(unitSales)}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <span className="tabular-nums text-sm">
+              ₱ {formatMoney(unitPrice)}
+            </span>
+          );
+        },
       },
-      { key: "note", label: "Note", render: (r) => r.note || "—" },
+      {
+        key: "total",
+        label: "Total",
+        align: "right",
+        render: (r) => {
+          const qty = Number(r.quantity || 0);
+          const unitPrice = getUnitPrice(r);
+          const unitSales = getUnitSalesPrice(r);
+
+          const hasSale =
+            unitSales != null &&
+            Number.isFinite(unitSales) &&
+            unitSales > 0 &&
+            unitSales !== unitPrice;
+
+          const effUnit = hasSale ? unitSales : unitPrice;
+          const rowTotal = qty * effUnit;
+
+          return (
+            <span className="tabular-nums text-sm font-medium">
+              ₱ {formatMoney(rowTotal)}
+            </span>
+          );
+        },
+      },
+      {
+        key: "note",
+        label: "Note",
+        render: (r) => r.note || "—",
+      },
       {
         key: "actions",
         label: "Actions",
@@ -324,6 +470,7 @@ export default function StockOutIndex() {
             <Button
               size="sm"
               variant="secondary"
+                 className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30"
               onClick={() => {
                 setEditingQtyId(r.id);
                 setDraftQty((p) => ({ ...p, [r.id]: r.quantity }));
@@ -335,10 +482,11 @@ export default function StockOutIndex() {
 
             <Button
               size="sm"
-              variant="danger"
+              variant="outline"
+                className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
               onClick={() => destroyRow(r.id)}
             >
-              Delete
+              <Trash size={16} />
             </Button>
           </div>
         ),
@@ -346,6 +494,38 @@ export default function StockOutIndex() {
     ],
     [editingQtyId, draftQty]
   );
+
+  /* ---------------------------
+      Table footer (current page total)
+  ----------------------------*/
+  const tableFooter = useMemo(() => {
+    if (!rows.length) return null;
+
+    // Columns: Product, Qty, Price, Total, Note, Actions (6 cols)
+    return (
+      <tr className="bg-gpt-50 dark:bg-gpt-900 text-gpt-600 dark:text-gpt-300 border-t border-gpt-200 dark:border-gpt-700">
+        <td
+          colSpan={1}
+          className="px-3 py-2 text-sm font-semibold text-right text-gpt-900 dark:text-gpt-100"
+        >
+            Page Total Qty:
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-center text-gpt-900 dark:text-gpt-100">
+            {pageTotals.totalQty}
+        </td>
+        <td
+
+          className="px-3 py-2 text-sm font-semibold text-right text-gpt-900 dark:text-gpt-100"
+        >
+          Page Total:
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-right text-gpt-900 dark:text-gpt-100">
+          ₱ {formatMoneyTotal(pageTotals.finalTotal)}
+        </td>
+        <td colSpan={2} className="px-3 py-2" />
+      </tr>
+    );
+  }, [rows, pageTotals]);
 
   return (
     <AuthenticatedLayout
@@ -476,11 +656,108 @@ export default function StockOutIndex() {
       </div>
 
       {/* Table */}
-      <Table columns={columns} rows={rows} empty="No Stock Out yet." />
-
-      <div className="mt-4">
-        <Pagination links={stockOuts?.links || []} />
+      <Table
+        columns={columns}
+        rows={rows}
+        emptyText="No Stock Out yet."
+        footer={tableFooter}
+      />
+      <div className="mb-4">
+        <Pagination meta={stockOuts} />
       </div>
+     <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        {/* RIGHT: page-level totals (only if there are rows) */}
+            {rows.length > 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm
+                                dark:border-gray-800 dark:bg-gpt-900">
+                {/* 👇 NEW: page qty */}
+                <div className="flex justify-between gap-6">
+                    <span className="font-medium text-gray-600 dark:text-gray-300">
+                    Total qty (this page):
+                    </span>
+                    <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                    {pageTotals.totalQty}
+                    </span>
+                </div>
+
+                <div className="mt-1 flex justify-between gap-6">
+                    <span className="font-medium text-gray-600 dark:text-gray-300">
+                    Subtotal (Sale items, this page):
+                    </span>
+                    <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                    ₱ {formatMoneyTotal(pageTotals.saleSubtotal)}
+                    </span>
+                </div>
+                <div className="mt-1 flex justify-between gap-6">
+                    <span className="font-medium text-gray-600 dark:text-gray-300">
+                    Subtotal (Non-sale items, this page):
+                    </span>
+                    <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                    ₱ {formatMoneyTotal(pageTotals.regularSubtotal)}
+                    </span>
+                </div>
+                <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
+                    <div className="flex justify-between gap-6">
+                    <span className="font-semibold text-gray-800 dark:text-gray-100">
+                        Final Total (this page):
+                    </span>
+                    <span className="tabular-nums font-semibold text-gray-900 dark:text-gray-100">
+                        ₱ {formatMoneyTotal(pageTotals.finalTotal)}
+                    </span>
+                    </div>
+                </div>
+                </div>
+            )}
+            {/* LEFT: 30-day totals (all pages) */}
+            <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm
+                            dark:border-gray-800 dark:bg-gpt-900">
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                Total of all Stock Out items for the last 30 days
+                </div>
+
+                <div className="mt-2 space-y-1">
+                {/* 👇 NEW: total qty last 30 days */}
+                <div className="flex justify-between gap-6">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Total qty (last 30 days):
+                    </span>
+                    <span className="tabular-nums font-medium text-gray-900 dark:text-gray-100">
+                    {rangeTotals.totalQty ?? 0}
+                    </span>
+                </div>
+
+                <div className="flex justify-between gap-6">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Sale items total:
+                    </span>
+                    <span className="tabular-nums font-medium text-gray-900 dark:text-gray-100">
+                    ₱ {formatMoneyTotal(rangeTotals.saleSubtotal ?? 0)}
+                    </span>
+                </div>
+
+                <div className="flex justify-between gap-6">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Non-sale items total:
+                    </span>
+                    <span className="tabular-nums font-medium text-gray-900 dark:text-gray-100">
+                    ₱ {formatMoneyTotal(rangeTotals.regularSubtotal ?? 0)}
+                    </span>
+                </div>
+
+                <div className="mt-1 border-t border-gray-200 pt-2 dark:border-gray-700">
+                    <div className="flex justify-between gap-6">
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                        Final total (last 30 days):
+                    </span>
+                    <span className="tabular-nums font-semibold text-gray-900 dark:text-gray-100">
+                        ₱ {formatMoneyTotal(rangeTotals.finalTotal ?? 0)}
+                    </span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
     </AuthenticatedLayout>
   );
 }

@@ -36,4 +36,9 @@ class StockOut extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function priceSnapshot()
+    {
+        return $this->hasOne(ProductPriceSnapshot::class);
+    }
+
 }

@@ -19,6 +19,7 @@ export default function Table({
   rows = [],
   emptyText = "No records found.",
   rowKey = "id",
+  footer = null,
 }) {
 
   const getRowKey = (row, i) =>
@@ -34,9 +35,9 @@ export default function Table({
   const cellAlignClass = headAlignClass;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900">
+    <div className="overflow-x-auto rounded-t-lg border border-b-1 border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900">
       <table className="min-w-full text-sm">
-        <thead className="bg-gpt-50 dark:bg-gpt-800">
+        <thead className="bg-gpt-50 dark:bg-gpt-900">
           <tr>
             {columns.map((col) => (
               <th
@@ -55,7 +56,7 @@ export default function Table({
           {rows.map((row, i) => (
             <tr
               key={getRowKey(row, i)}
-              className="border-t border-gray-100 dark:border-gpt-700"
+              className="border-t border-gray-100 dark:border-gpt-700 odd:bg-gpt-50 even:bg-white dark:odd:bg-gpt-700 dark:even:bg-gpt-900/80"
             >
               {columns.map((col) => (
                 <td
@@ -81,6 +82,12 @@ export default function Table({
             </tr>
           )}
         </tbody>
+        {/* 👇 NEW: tfoot support */}
+        {footer && (
+          <tfoot className="bg-gray-50 dark:bg-gpt-800/80 border-t border-gpt-200 dark:border-gpt-700">
+            {footer}
+          </tfoot>
+        )}
       </table>
     </div>
   );

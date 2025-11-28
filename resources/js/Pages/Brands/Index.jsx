@@ -8,6 +8,7 @@ import Modal from "@/Components/ui/Modal";
 import Button from "@/Components/ui/Button";
 import TextInput from "@/Components/ui/TextInput";
 import Pagination from "@/Components/ui/Pagination";
+import { Pencil, Trash } from "lucide-react";
 
 export default function BrandsIndex() {
     const { brands, filters = {}, errors } = usePage().props;
@@ -100,21 +101,21 @@ export default function BrandsIndex() {
             label: "Actions",
             render: (brand) => (
                 <div className="flex items-center gap-2">
-                    <Button
+                     <Button
+                        variant="outline"
                         type="button"
-                        variant="secondary"
-                        size="sm"
+                        className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30"
                         onClick={() => startEdit(brand)}
                     >
-                        Edit
+                        <Pencil size={16} />
                     </Button>
                     <Button
+                        variant="outline"
                         type="button"
-                        variant="danger"
-                        size="sm"
+                        className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
                         onClick={() => deleteBrand(brand.id)}
                     >
-                        Delete
+                        <Trash size={16} />
                     </Button>
                 </div>
             ),
@@ -155,8 +156,8 @@ export default function BrandsIndex() {
 
                 {/* PAGINATION */}
                 {brands?.links && brands.links.length > 3 && (
-                    <div className="mt-4">
-                        <Pagination links={brands.links} />
+                    <div className="mb-4">
+                        <Pagination links={brands} />
                     </div>
                 )}
             </div>

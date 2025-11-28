@@ -35,4 +35,9 @@ class StockIn extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    // In App\Models\StockIn.php
+    public function priceSnapshot()
+    {
+        return $this->hasOne(ProductPriceSnapshot::class);
+    }
 }

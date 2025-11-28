@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Head, useForm, usePage, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Folder, CornerDownRight } from "lucide-react";
+import { Folder, CornerDownRight, Pencil,Trash } from "lucide-react";
 import axios from "axios";
 
 import Table from "@/Components/ui/Table";
@@ -201,11 +201,21 @@ export default function CategoriesIndex() {
       label: "Actions",
       render: (cat) => (
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => startEditParent(cat)}>
-            Edit
+           <Button
+            variant="outline"
+            type="button"
+            className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30"
+            onClick={() => startEditParent(cat)}
+          >
+            <Pencil size={16} />
           </Button>
-          <Button size="sm" variant="danger" onClick={() => deleteParent(cat.id)}>
-            Delete
+          <Button
+            variant="outline"
+            type="button"
+            className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+            onClick={() => deleteParent(cat.id)}
+          >
+            <Trash size={16} />
           </Button>
         </div>
       ),
@@ -228,12 +238,23 @@ export default function CategoriesIndex() {
       label: "Actions",
       render: (child) => (
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => startEditChild(child)}>
-            Edit
+          <Button
+            variant="outline"
+            type="button"
+            className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30"
+            onClick={() => startEditChild(child)}
+          >
+            <Pencil size={16} />
           </Button>
-          <Button size="sm" variant="danger" onClick={() => deleteChild(child.id)}>
-            Delete
+          <Button
+            variant="outline"
+            type="button"
+            className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+            onClick={() => deleteChild(child.id)}
+          >
+            <Trash size={16} />
           </Button>
+
         </div>
       ),
     },
@@ -264,8 +285,8 @@ export default function CategoriesIndex() {
 
           {/* Parents Pagination (server-side links) */}
           {parents?.last_page > 1 && (
-            <div className="mt-3">
-              <Pagination links={parents.links} />
+            <div className="mb-4">
+                    <Pagination meta={parents} />
             </div>
           )}
         </div>
@@ -301,22 +322,23 @@ export default function CategoriesIndex() {
                 <div className="text-sm text-gpt-500">Loading children...</div>
               ) : (
                 <>
-                  <Table
-                    columns={childColumns}
-                    rows={childRows}
-                    emptyText="No child categories."
-                  />
+                    <div className="mt-2 rounded-lg border border-gray-100 dark:border-gpt-700 overflow-hidden">
+                        <Table
+                            columns={childColumns}
+                            rows={childRows}
+                            emptyText="No child categories."
+                        />
 
-                  {/* Children Pagination (numeric) */}
-                  {childMeta.last_page > 1 && (
-                    <div className="mt-3">
-                      <Pagination
-                        currentPage={childMeta.current_page}
-                        lastPage={childMeta.last_page}
-                        onPageChange={(p) => loadChildren(selectedId, p)}
-                      />
+                        {childMeta.last_page > 1 && (
+                            <div className="border-t border-gray-100 dark:border-gpt-700">
+                            <Pagination
+                                currentPage={childMeta.current_page}
+                                lastPage={childMeta.last_page}
+                                onPageChange={(p) => loadChildren(selectedId, p)}
+                            />
+                            </div>
+                        )}
                     </div>
-                  )}
                 </>
               )}
             </>

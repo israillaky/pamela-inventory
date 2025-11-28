@@ -7,7 +7,7 @@ import TextInput from "@/Components/ui/TextInput";
 import Button from "@/Components/ui/Button";
 import Table from "@/Components/ui/Table";
 import Pagination from "@/Components/ui/Pagination";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 
 export default function StockInIndex() {
   const { stockIns, flash } = usePage().props;
@@ -264,12 +264,97 @@ export default function StockInIndex() {
     router.delete(route("stock-in.destroy", id), { preserveScroll: true });
   };
 
-    // NEW: edit state (input only shows after clicking edit icon)
+  // edit state
   const [editingQtyId, setEditingQtyId] = useState(null);
   const [draftQty, setDraftQty] = useState({});
 
   const rows = stockIns?.data || [];
 
+  /* ---------------------------
+      Pricing helpers (snapshot-aware)
+  ----------------------------*/
+  const getUnitPrice = (r) => {
+    // Prefer snapshot (historical) if available
+    const fromSnapshot =
+      r.price_snapshot?.unit_price ??
+      r.product_price_snapshot?.unit_price ??
+      null;
+
+    const fromProduct = r.product?.price ?? null;
+
+    const raw = fromSnapshot ?? fromProduct ?? 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const getUnitSalesPrice = (r) => {
+    const fromSnapshot =
+      r.price_snapshot?.unit_sales_price ??
+      r.product_price_snapshot?.unit_sales_price ??
+      null;
+
+    const fromProduct = r.product?.sales_price ?? null;
+
+    const raw = fromSnapshot ?? fromProduct;
+    if (raw == null) return null;
+
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const formatMoney = (value) => {
+    if (!Number.isFinite(value)) return "—";
+    if (value <= 0) return "—";
+
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // separate formatter for totals (always show 0.00+)
+  const formatMoneyTotal = (value) => {
+    if (!Number.isFinite(value)) value = 0;
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  /* ---------------------------
+      Totals (for footer)
+  ----------------------------*/
+  const totals = useMemo(() => {
+    let totalQty = 0;
+    let totalProductPrice = 0;
+    let totalAmount = 0;
+    let totalProductSalesPrice = 0;
+    let totalSalesAmount = 0;
+
+    rows.forEach((r) => {
+      const qty = Number(r.quantity || 0);
+      const unitPrice = getUnitPrice(r);
+      const unitSales = getUnitSalesPrice(r) ?? 0;
+
+      totalQty += qty;
+      totalProductPrice += unitPrice;
+      totalAmount += qty * unitPrice;
+      totalProductSalesPrice += unitSales;
+      totalSalesAmount += qty * unitSales;
+    });
+
+    return {
+      totalQty,
+      totalProductPrice,
+      totalAmount,
+      totalProductSalesPrice,
+      totalSalesAmount,
+    };
+  }, [rows]);
+
+  /* ---------------------------
+      Table columns
+  ----------------------------*/
   const columns = useMemo(
     () => [
       {
@@ -277,7 +362,7 @@ export default function StockInIndex() {
         label: "Product",
         render: (r) => (
           <div className="leading-tight">
-            <div className="font-medium text-gpt-900 dark:text-gpt-100">
+            <div className="text-md font-medium text-gpt-900 dark:text-gpt-100">
               {r.product?.name || "—"}
             </div>
             <div className="text-xs text-gray-400 dark:text-gpt-400">
@@ -318,21 +403,101 @@ export default function StockInIndex() {
         },
       },
       {
+        key: "amount",
+        label: "Product Price",
+        align: "right",
+        render: (r) => {
+          const qty = Number(r.quantity || 0);
+          const unitPrice = getUnitPrice(r);
+          const amount = unitPrice;
+
+          return (
+            <span className="tabular-nums text-sm">
+              ₱ {formatMoney(amount)}
+            </span>
+          );
+        },
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        align: "right",
+        render: (r) => {
+          const qty = Number(r.quantity || 0);
+          const unitPrice = getUnitPrice(r);
+          const amount = qty * unitPrice;
+
+          return (
+            <span className="tabular-nums text-sm">
+              ₱ {formatMoney(amount)}
+            </span>
+          );
+        },
+      },
+      {
+        key: "sale_price",
+        label: "Product Sales Price",
+        align: "right",
+        render: (r) => {
+          const qty = Number(r.quantity || 0);
+          const unitSalesPrice = getUnitSalesPrice(r);
+          const salesTotal = unitSalesPrice ?? 0;
+
+          return (
+            <span className="tabular-nums text-sm">
+              ₱ {formatMoney(salesTotal)}
+            </span>
+          );
+        },
+      },
+      {
+        key: "sale_price",
+        label: "Sales Amount",
+        align: "right",
+        render: (r) => {
+          const qty = Number(r.quantity || 0);
+          const unitSalesPrice = getUnitSalesPrice(r);
+          const salesTotal = qty * (unitSalesPrice ?? 0);
+
+          return (
+            <span className="tabular-nums text-sm">
+              ₱ {formatMoney(salesTotal)}
+            </span>
+          );
+        },
+      },
+      /*{
         key: "timestamp",
         label: "Date",
         render: (r) =>
           new Date(r.timestamp || r.created_at).toLocaleString(),
       },
-      { key: "note", label: "Note", render: (r) => r.note || "—" },
+      {
+        key: "created_by",
+        label: "Created By",
+        render: (r) => (
+          <span className="text-sm">
+            {r.creator?.name ??
+              (r.created_by ? `User #${r.created_by}` : "—")}
+          </span>
+        ),
+      },*/
+      {
+        key: "note",
+        label: "Note",
+        render: (r) => r.note || "—",
+      },
       {
         key: "actions",
         label: "Actions",
         align: "right",
         render: (r) => (
           <div className="flex justify-end gap-2">
+
             <Button
               size="sm"
-              variant="secondary"
+             className="px-1 py-1 border-0   hover:bg-blue-100 dark:hover:bg-blue-900/30"
+              variant="outline"
               onClick={() => {
                 setEditingQtyId(r.id);
                 setDraftQty((p) => ({ ...p, [r.id]: r.quantity }));
@@ -344,10 +509,11 @@ export default function StockInIndex() {
 
             <Button
               size="sm"
-              variant="danger"
+              variant="outline"
               onClick={() => destroyRow(r.id)}
+             className="px-1 py-1 border-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
             >
-              Delete
+              <Trash size={16} />
             </Button>
           </div>
         ),
@@ -355,6 +521,37 @@ export default function StockInIndex() {
     ],
     [editingQtyId, draftQty]
   );
+  /* ---------------------------
+      Table footer (tfoot)
+  ----------------------------*/
+  const tableFooter = useMemo(() => {
+    if (!rows.length) return null;
+
+    // Columns: Product | Qty | Product Price | Amount | Product Sales Price | Sales Amount | Note | Actions
+    return (
+      <tr className="bg-gpt-50 dark:bg-gpt-900 text-gpt-900 dark:text-gpt-200 border-t border-gpt-200 dark:border-gpt-700">
+        <td className="px-3 py-2 text-xs font-semibold text-right">
+          Totals:
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-center">
+          {totals.totalQty}
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-right">
+          ₱ {formatMoneyTotal(totals.totalProductPrice)}
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-right">
+          ₱ {formatMoneyTotal(totals.totalAmount)}
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-right">
+          ₱ {formatMoneyTotal(totals.totalProductSalesPrice)}
+        </td>
+        <td className="px-3 py-2 text-sm font-semibold text-right">
+          ₱ {formatMoneyTotal(totals.totalSalesAmount)}
+        </td>
+        <td className="px-3 py-2" colSpan={2} />
+      </tr>
+    );
+  }, [rows, totals]);
 
   return (
     <AuthenticatedLayout
@@ -387,7 +584,7 @@ export default function StockInIndex() {
         </div>
       )}
 
-      {/* Scan/Search + Qty + Add (INLINE + dropdown inside search) */}
+      {/* Scan/Search + Qty + Add */}
       <div className="mb-2 w-full max-w-3xl">
         <div className="flex items-stretch gap-2">
           <div className="relative flex-1">
@@ -404,7 +601,7 @@ export default function StockInIndex() {
               className="w-full h-11"
             />
 
-            {/* Only ONE dropdown here */}
+            {/* Suggestions dropdown */}
             {openSuggest && (
               <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-100 bg-white shadow-lg
                               dark:border-gpt-700 dark:bg-gpt-900">
@@ -414,7 +611,6 @@ export default function StockInIndex() {
                   </div>
                 )}
 
-                {/* No matches only if user typed/scanned AND no selectedProduct */}
                 {!loadingSuggest &&
                   query.trim() !== "" &&
                   suggestions.length === 0 &&
@@ -430,7 +626,7 @@ export default function StockInIndex() {
                       key={p.id}
                       type="button"
                       onMouseDown={(e) => {
-                        e.preventDefault(); // stop blur stealing focus
+                        e.preventDefault();
                         selectProduct(p);
                       }}
                       onMouseEnter={() => setHighlight(i)}
@@ -488,11 +684,64 @@ export default function StockInIndex() {
       </div>
 
       {/* Table */}
-      <Table columns={columns} rows={rows} empty="No Stock In yet." />
-
-      <div className="mt-4">
-        <Pagination links={stockIns?.links || []} />
+      <Table columns={columns} rows={rows} empty="No Stock In yet." footer={tableFooter} />
+      <div className="mb-4">
+        <Pagination meta={stockIns} />
       </div>
+
+      {/* Optional extra summary card if you still want it */}
+      {rows.length > 0 && (
+        <div className="mt-3 flex justify-end">
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm
+                          dark:border-gray-800 dark:bg-gpt-900">
+            <div className="flex justify-between gap-6">
+              <span className="font-medium text-gray-600 dark:text-gray-300">
+                Total Qty:
+              </span>
+              <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                {totals.totalQty}
+              </span>
+            </div>
+
+            <div className="mt-1 flex justify-between gap-6">
+              <span className="font-medium text-gray-600 dark:text-gray-300">
+                Total Product Price:
+              </span>
+              <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                ₱ {formatMoneyTotal(totals.totalProductPrice)}
+              </span>
+            </div>
+
+            <div className="mt-1 flex justify-between gap-6">
+              <span className="font-medium text-gray-600 dark:text-gray-300">
+                Total Amount:
+              </span>
+              <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                ₱ {formatMoneyTotal(totals.totalAmount)}
+              </span>
+            </div>
+
+            <div className="mt-1 flex justify-between gap-6">
+              <span className="font-medium text-gray-600 dark:text-gray-300">
+                Total Product Sales Price:
+              </span>
+              <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                ₱ {formatMoneyTotal(totals.totalProductSalesPrice)}
+              </span>
+            </div>
+
+            <div className="mt-1 flex justify-between gap-6">
+              <span className="font-medium text-gray-600 dark:text-gray-300">
+                Total Sales Amount:
+              </span>
+              <span className="tabular-nums text-gray-900 dark:text-gray-100">
+                ₱ {formatMoneyTotal(totals.totalSalesAmount)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
     </AuthenticatedLayout>
   );
 }

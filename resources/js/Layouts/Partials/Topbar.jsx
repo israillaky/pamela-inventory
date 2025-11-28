@@ -32,7 +32,7 @@ export default function Topbar({ collapsed, onToggleSidebar }) {
     };
 
     return (
-        <header className="h-14 bg-white dark:bg-gpt-900 border-b border-gray-100 dark: px-4 flex items-center justify-between gap-2 shadow-theme-xs">
+        <header className="h-14 bg-white dark:bg-gpt-900 border-b border-gray-100 dark:border-gpt-700 px-4 flex items-center justify-between gap-2 shadow-theme-xs">
             {/* LEFT SIDE: collapse button + title */}
             <div className="flex items-center gap-3">
                 <button
