@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
                 'name' => 'Admin',
                 'username' => 'admin',
                 'email' => 'admin@pamelainventory.test',
-                'password' => Hash::make('qwerty!12345'),
+                'password' => Hash::make('admin123'),
                 'role' => 'admin',
             ],
             [

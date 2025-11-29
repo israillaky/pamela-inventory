@@ -1,7 +1,15 @@
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 export default function Login() {
+    const { settings } = usePage().props;
+
+    const logoSrc =
+        settings?.company_logo || "/assets/logo/pamelas-logo.png";
+
+    const companyName =
+        settings?.company_name || "Pamela's Online Shop";
+
     const { data, setData, post, processing, errors } = useForm({
         username: "",
         password: "",
@@ -147,15 +155,14 @@ export default function Login() {
                     />
 
                     <div className="relative z-10 text-center px-10">
-                        {/* Single logo (no switching) */}
                         <img
-                            src="/assets/logo/pamelas-logo.png"
+                            src={logoSrc}
                             alt="Logo"
                             className="mx-auto mb-6 w-28 h-auto"
                         />
 
                         <h2 className="text-white text-2xl font-semibold">
-                            Pamela's Onlien Shop
+                            {companyName}
                         </h2>
                         <p className="text-white/80 text-theme-sm mt-2">
                             Inventory Management System with Barcode Generation

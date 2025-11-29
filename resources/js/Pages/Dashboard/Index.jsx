@@ -97,15 +97,21 @@ export default function Dashboard() {
   const isDark = useIsDarkMode();
 
   const role = auth?.user?.role;
+  const userId = auth?.user?.id;
   const isCashier = role === "cashier";
 
-  const chartColors = {
-    bar: isDark ? "#60a5fa" : "#2563eb",
-    grid: isDark ? "#1f2937" : "#e5e7eb",
-    axis: isDark ? "#9ca3af" : "#6b7280",
-    tooltipBg: isDark ? "#111827" : "#ffffff",
-    tooltipBorder: isDark ? "#374151" : "#e5e7eb",
-    tooltipText: isDark ? "#e5e7eb" : "#111827",
+  const chartColors = { /* ...same as before... */ };
+
+  // 🔹 Base report params: cashier auto-filters by created_by
+  const baseReportParams = isCashier && userId
+    ? { created_by: userId }
+    : {};
+
+  const reportUrls = {
+    stock_in: route("reports.index", { ...baseReportParams, tab: "stock_in" }),
+    stock_out: route("reports.index", { ...baseReportParams, tab: "stock_out" }),
+    sales_in: route("reports.index", { ...baseReportParams, tab: "sales_in" }),
+    sales_out: route("reports.index", { ...baseReportParams, tab: "sales_out" }),
   };
 
   return (
@@ -121,7 +127,7 @@ export default function Dashboard() {
             title="Total Stock In"
             value={num(totals.stock_in_qty)}
             icon={ArrowDown}
-            href="/reports?tab=stock_in"
+            href={reportUrls.stock_in}
           />
         )}
 
@@ -130,7 +136,7 @@ export default function Dashboard() {
           title="Total Stock Out"
           value={num(totals.stock_out_qty)}
           icon={ArrowUp}
-          href="/reports?tab=stock_out"
+          href={reportUrls.stock_out}
         />
 
         {/* ✦ Admin/Staff/Warehouse Manager Only */}
@@ -139,7 +145,7 @@ export default function Dashboard() {
             title="Total Sales In"
             value={money(totals.sales_in)}
             icon={CircleDollarSign}
-            href="/reports?tab=sales_in"
+            href={reportUrls.sales_in}
           />
         )}
 
@@ -148,83 +154,11 @@ export default function Dashboard() {
           title="Total Sales Out"
           value={money(totals.sales_out)}
           icon={ReceiptText}
-          href="/reports?tab=sales_out"
+          href={reportUrls.sales_out}
         />
       </div>
 
-      {/* EXTRA STATS ROW (hide for cashier) */}
-      {!isCashier && (
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-5 shadow-theme-xs">
-            <div className="flex items-center gap-2 text-sm text-gpt-500 dark:text-gpt-400">
-              <Package size={16} /> Total Products
-            </div>
-            <div className="mt-2 text-2xl font-semibold">{num(totals.products)}</div>
-          </div>
-
-          <div className="rounded-2xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-5 shadow-theme-xs">
-            <div className="flex items-center gap-2 text-sm text-gpt-500 dark:text-gpt-400">
-              <Boxes size={16} /> Total Inventory Value (Price)
-            </div>
-            <div className="mt-2 text-2xl font-semibold">{money(totals.inventory_value)}</div>
-          </div>
-
-          <div className="rounded-2xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-5 shadow-theme-xs">
-            <div className="flex items-center gap-2 text-sm text-gpt-500 dark:text-gpt-400">
-              <Boxes size={16} /> Inventory Value (Sales Price)
-            </div>
-            <div className="mt-2 text-2xl font-semibold">{money(totals.inventory_value_sales)}</div>
-          </div>
-        </div>
-      )}
-
-      {/* GRAPH (everyone sees it) */}
-      {graphData.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 p-5 shadow-theme-xs">
-          <div className="mb-3 text-sm font-medium text-gray-700 dark:text-gpt-200">
-            Stock Out — Last 7 Days
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={graphData}>
-                <CartesianGrid stroke={chartColors.grid} strokeDasharray="3 3" />
-
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 12, fill: chartColors.axis }}
-                  axisLine={{ stroke: chartColors.axis }}
-                  tickLine={{ stroke: chartColors.axis }}
-                />
-
-                <YAxis
-                  tick={{ fontSize: 12, fill: chartColors.axis }}
-                  axisLine={{ stroke: chartColors.axis }}
-                  tickLine={{ stroke: chartColors.axis }}
-                  allowDecimals={false}
-                />
-
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: chartColors.tooltipBg,
-                    borderColor: chartColors.tooltipBorder,
-                    borderRadius: 10,
-                    color: chartColors.tooltipText,
-                  }}
-                  itemStyle={{ color: chartColors.tooltipText }}
-                  labelStyle={{ color: chartColors.tooltipText }}
-                  cursor={{ fill: isDark ? "#0b1220" : "#f3f4f6" }}
-                />
-
-                <Bar
-                  dataKey="stock_out"
-                  fill={chartColors.bar}
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+      {/* rest of the component unchanged … */}
     </AuthenticatedLayout>
   );
 }

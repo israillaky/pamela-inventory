@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\AuditLog;
 use App\Http\Middleware\ActivityLogger;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -11,42 +12,70 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Throwable;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Throwable;
 use Illuminate\Console\Scheduling\Schedule;
 
-
-
 return Application::configure(basePath: dirname(__DIR__))
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routing
+    |--------------------------------------------------------------------------
+    */
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware
+    |--------------------------------------------------------------------------
+    */
     ->withMiddleware(function (Middleware $middleware) {
+
+        // Web middleware group additions
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Aliases
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
-            //'activity.logger' => ActivityLogger::class,
         ]);
+
+        // Add activity logger to web requests
         $middleware->appendToGroup('web', [
             ActivityLogger::class,
         ]);
-
-        //
     })
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scheduler
+    |--------------------------------------------------------------------------
+    */
     ->withSchedule(function (Schedule $schedule) {
-        // Run every night at 2 AM
+        // prune audit_logs every day at 9 AM
         $schedule->command('audit-logs:prune')->dailyAt('09:00');
     })
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exception Handling
+    |--------------------------------------------------------------------------
+    */
     ->withExceptions(function (Exceptions $exceptions) {
-        /**
-         * 1) AUTHENTICATION (401 / redirect to login)
-         */
-        $exceptions->render(function (\Throwable $e, Request $request) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Authentication Exception (401)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function (Throwable $e, Request $request) {
             if (! $e instanceof AuthenticationException) {
                 return null;
             }
@@ -58,28 +87,33 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect()->guest(route('login'));
         });
 
-        /**
-         * 2) AUTHORIZATION (403 Forbidden)
-         */
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            $isAuthorizationException = $e instanceof AuthorizationException;
-            $isHttp403 = $e instanceof HttpExceptionInterface && $e->getStatusCode() === 403;
+        /*
+        |--------------------------------------------------------------------------
+        | 2. Authorization Exception (403)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function (Throwable $e, Request $request) {
+            $isAuthz = $e instanceof AuthorizationException;
+            $is403 = $e instanceof HttpExceptionInterface && $e->getStatusCode() === 403;
 
-            // Only handle real 403s (AuthorizationException or abort(403))
-            if (! $isAuthorizationException && ! $isHttp403) {
+            if (! $isAuthz && ! $is403) {
                 return null;
             }
 
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'You are not allowed to perform this action.'], 403);
+                return response()->json([
+                    'message' => 'You are not allowed to perform this action.'
+                ], 403);
             }
 
+            // Inertia requests
             if ($request->header('X-Inertia')) {
                 return Inertia::render('Error/Forbidden', [
                     'message' => 'You are not allowed to perform this action.',
                 ])->toResponse($request)->setStatusCode(403);
             }
 
+            // Blade fallback
             return response()->view(
                 'errors.generic',
                 ['message' => 'You are not allowed to perform this action.'],
@@ -87,13 +121,12 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        /**
-         * 3) VALIDATION (422)
-         *
-         * Usually Laravel + Inertia already handle this for web forms,
-         * but we normalize JSON responses and avoid touching Inertia behaviour.
-         */
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Validation Exception (422)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function (Throwable $e, Request $request) {
             if (! $e instanceof ValidationException) {
                 return null;
             }
@@ -105,14 +138,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 422);
             }
 
-            // For web/Inertia, let Laravel keep the default (redirect back with errors)
-            return null;
+            return null; // use Laravel's default Inertia redirect back
         });
 
-        /**
-         * 4) NOT FOUND (404)
-         */
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Not Found Exception (404)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function (Throwable $e, Request $request) {
             if (! $e instanceof NotFoundHttpException) {
                 return null;
             }
@@ -134,49 +168,55 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        /**
-         * 5) GENERIC SYSTEM ERROR (500) + POPUP
-         *
-         * Only used when APP_DEBUG=false.
-         */
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            // In debug, let Laravel show the detailed error page
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Generic System Error (500)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function (Throwable $e, Request $request) {
+
+            // If debugging → use Laravel's Whoops screen
             if (config('app.debug')) {
                 return null;
             }
 
-            // JSON / API
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Something went wrong with the system. Please contact your developer.',
+                    'message' =>
+                        'Something went wrong with the system. Please contact your developer.',
                 ], 500);
             }
 
-            // Inertia (React) requests → show System error popup page
             if ($request->header('X-Inertia')) {
                 return Inertia::render('Error/System', [
-                    'message' => 'Something went wrong with the system. Please contact your developer.',
+                    'message' =>
+                        'Something went wrong with the system. Please contact your developer.',
                 ])->toResponse($request)->setStatusCode(500);
             }
 
-            // Fallback for non-Inertia web
+            // Blade fallback
             return response()->view(
                 'errors.generic',
-                ['message' => 'Something went wrong with the system. Please contact your developer.'],
+                ['message' =>
+                    'Something went wrong with the system. Please contact your developer.'
+                ],
                 500
             );
         });
 
-        /**
-         * 6) REPORTING: log unexpected errors into audit_logs
-         */
-        $exceptions->report(function (\Throwable $e) {
-            // Skip DB logging in local to avoid noise
+        /*
+        |--------------------------------------------------------------------------
+        | 6. Error Reporting → Log into audit_logs (non-debug & non-noise cases)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->report(function (Throwable $e) {
+
+            // Skip recording in local environment
             if (app()->environment('local')) {
                 return;
             }
 
-            // Do not log "noise" exceptions as system errors
+            // Skip noise exceptions
             if (
                 $e instanceof AuthenticationException ||
                 $e instanceof AuthorizationException ||
@@ -198,8 +238,9 @@ return Application::configure(basePath: dirname(__DIR__))
                     'user_agent' => (string) request()->userAgent(),
                 ]);
             } catch (Throwable $inner) {
-                // never let logging break the app
+                // Never allow reporting failure to break app
             }
         });
+    })
 
-    })->create();
+    ->create();

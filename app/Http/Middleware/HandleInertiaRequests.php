@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Services\SettingsService;
+
 class HandleInertiaRequests extends Middleware
 {
     /**
@@ -31,16 +32,42 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+
+            // Auth user
             'auth' => [
                 'user' => $request->user()
-                    ? $request->user()->only('id','name','username','role')
+                    ? $request->user()->only('id', 'name', 'username', 'role')
                     : null,
             ],
+
+            // Global settings (normalized)
             'settings' => function () {
                 /** @var \App\Services\SettingsService $service */
                 $service = app(SettingsService::class);
 
-                return $service->all();
+                $settings = $service->all();
+
+                $rawLogo = $settings['company_logo'] ?? null;
+
+                // Fallback default logo in /public/assets/logo/
+                $defaultLogo = asset('assets/logo/pamelas-logo.png');
+
+                $logoUrl = $defaultLogo;
+
+                if ($rawLogo) {
+                    // if already a full URL (old system)
+                    if (str_starts_with($rawLogo, 'http')) {
+                        $logoUrl = $rawLogo;
+                    } else {
+                        // new system: stored path "logos/xxx.png"
+                        $logoUrl = asset('storage/' . ltrim($rawLogo, '/'));
+                    }
+                }
+
+                return [
+                    'company_name' => $settings['company_name'] ?? 'Pamela\'s Online Shop',
+                    'company_logo' => $logoUrl,
+                ];
             },
         ];
     }

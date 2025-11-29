@@ -24,10 +24,23 @@ class SettingsController extends Controller
     {
         $settings = $this->settings->all();
 
+        $rawLogo = $settings['company_logo'] ?? null;
+        $logoUrl = null;
+
+        if ($rawLogo) {
+            // If old value is already a full URL, keep as-is
+            if (str_starts_with($rawLogo, 'http')) {
+                $logoUrl = $rawLogo;
+            } else {
+                // Stored as relative path like "logos/logo.png"
+                $logoUrl = asset('storage/' . ltrim($rawLogo, '/'));
+            }
+        }
+
         return Inertia::render('Settings/Index', [
             'settings' => [
-                'company_name'    => $settings['company_name'] ?? 'pamela-inventory',
-                'company_logo'    => $settings['company_logo'] ?? null,
+                'company_name' => $settings['company_name'] ?? 'pamela-inventory',
+                'company_logo' => $logoUrl,
             ],
         ]);
     }
@@ -37,26 +50,33 @@ class SettingsController extends Controller
         $current = $this->settings->all();
 
         $validated = $request->validate([
-            'company_name'    => ['required', 'string', 'max:255'],
-            'company_logo'    => ['nullable', 'image', 'max:2048'],
+            'company_name' => ['required', 'string', 'max:255'],
+            'company_logo' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        // Save scalar settings
-        foreach ($validated as $key => $value) {
-            if ($key !== 'company_logo') {
-                $this->settings->set($key, $value);
-            }
-        }
+        // Save company name
+        $this->settings->set('company_name', $validated['company_name']);
 
-        // Handle logo upload
+        // Start from existing logo value (could be URL or path)
+        $newLogoPath = $current['company_logo'] ?? null;
+
+        // If a new logo file is uploaded
         if ($request->hasFile('company_logo')) {
-            $path = $request->file('company_logo')->store('logos', 'public');
-            $logoUrl = asset('storage/' . $path);
+            // If old logo looks like a path (not URL), try to delete file
+            if (!empty($current['company_logo']) && !str_starts_with($current['company_logo'], 'http')) {
+                if (Storage::disk('public')->exists($current['company_logo'])) {
+                    Storage::disk('public')->delete($current['company_logo']);
+                }
+            }
 
-            $this->settings->set('company_logo', $logoUrl);
+            // Store new file on "public" disk -> returns path like "logos/xxxx.png"
+            $newLogoPath = $request->file('company_logo')->store('logos', 'public');
+
+            // Save only the path
+            $this->settings->set('company_logo', $newLogoPath);
         }
 
-        // Audit log
+        // Audit log: store raw stored values (not URLs)
         $this->logActivity(
             action: 'updated',
             module: 'settings',
@@ -67,7 +87,7 @@ class SettingsController extends Controller
                 ],
                 'after' => [
                     'company_name' => $validated['company_name'],
-                    'company_logo' => $logoUrl,
+                    'company_logo' => $newLogoPath,
                 ],
             ]
         );

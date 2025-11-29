@@ -24,6 +24,7 @@ export default function SettingsIndex() {
 
       <form
         onSubmit={submit}
+        encType="multipart/form-data"
         className="max-w-3xl space-y-6 bg-white dark:bg-gpt-900 rounded-2xl shadow-theme-xs p-6"
       >
         {/* Company Name */}

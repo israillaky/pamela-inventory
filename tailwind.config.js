@@ -19,8 +19,9 @@ export default {
              * - add outfit for optional use (font-outfit)
              */
             fontFamily: {
-                sans: ["Figtree", ...defaultTheme.fontFamily.sans],
-                outfit: ["Outfit", ...defaultTheme.fontFamily.sans],
+                outfit: ["Outfit", "Montserrat", "sans-serif"],
+                // optional: also make it the default sans
+                sans: ["Outfit", "Montserrat", "sans-serif"],
             },
 
             /**

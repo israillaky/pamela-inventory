@@ -18,15 +18,74 @@
         @endif
 
 
-
-
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
+
+        <style>
+            /* Outfit */
+            @font-face {
+                font-family: "Outfit";
+                src: url("{{ asset('fonts/outfit/Outfit-Regular.ttf') }}") format("truetype");
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Outfit";
+                src: url("{{ asset('fonts/outfit/Outfit-Medium.ttf') }}") format("truetype");
+                font-weight: 500;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Outfit";
+                src: url("{{ asset('fonts/outfit/Outfit-SemiBold.ttf') }}") format("truetype");
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Outfit";
+                src: url("{{ asset('fonts/outfit/Outfit-Bold.ttf') }}") format("truetype");
+                font-weight: 700;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            /* Montserrat (optional if you use it) */
+            @font-face {
+                font-family: "Montserrat";
+                src: url("{{ asset('fonts/montserrat/Montserrat-Regular.ttf') }}") format("truetype");
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Montserrat";
+                src: url("{{ asset('fonts/montserrat/Montserrat-Medium.ttf') }}") format("truetype");
+                font-weight: 500;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Montserrat";
+                src: url("{{ asset('fonts/montserrat/Montserrat-SemiBold.ttf') }}") format("truetype");
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Montserrat";
+                src: url("{{ asset('fonts/montserrat/Montserrat-Bold.ttf') }}") format("truetype");
+                font-weight: 700;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
+
     </head>
     <body class="font-sans antialiased">
         @inertia

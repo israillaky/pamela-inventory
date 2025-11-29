@@ -450,22 +450,6 @@ export default function StockInIndex() {
           );
         },
       },
-      {
-        key: "sale_price",
-        label: "Sales Amount",
-        align: "right",
-        render: (r) => {
-          const qty = Number(r.quantity || 0);
-          const unitSalesPrice = getUnitSalesPrice(r);
-          const salesTotal = qty * (unitSalesPrice ?? 0);
-
-          return (
-            <span className="tabular-nums text-sm">
-              ₱ {formatMoney(salesTotal)}
-            </span>
-          );
-        },
-      },
       /*{
         key: "timestamp",
         label: "Date",
@@ -545,10 +529,7 @@ export default function StockInIndex() {
         <td className="px-3 py-2 text-sm font-semibold text-right">
           ₱ {formatMoneyTotal(totals.totalProductSalesPrice)}
         </td>
-        <td className="px-3 py-2 text-sm font-semibold text-right">
-          ₱ {formatMoneyTotal(totals.totalSalesAmount)}
-        </td>
-        <td className="px-3 py-2" colSpan={2} />
+        <td className="px-3 py-2" colSpan={3} />
       </tr>
     );
   }, [rows, totals]);

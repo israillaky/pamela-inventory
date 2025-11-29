@@ -16,7 +16,7 @@ class StockOutController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager', 'cashier']), 403);
 
         // existing filters
         $filters = $request->only(['search', 'product_id', 'date_from', 'date_to']);
@@ -101,7 +101,7 @@ class StockOutController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager', 'cashier']), 403);
 
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
@@ -145,7 +145,7 @@ class StockOutController extends Controller
 
     public function update(Request $request, StockOut $stockOut)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager', 'cashier']), 403);
 
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
@@ -207,7 +207,7 @@ class StockOutController extends Controller
 
     public function searchProducts(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager', 'cashier']), 403);
 
         $q = trim($request->get('q', ''));
 

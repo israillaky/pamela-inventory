@@ -564,11 +564,20 @@ export default function ReportsIndex() {
 
   const totalQty = totals.qty ?? 0;
 
+  function triggerDownload(url) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = ""; // allow file to download normally
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
   const exportCsv = () => {
-    window.open(route("reports.export.csv", exportParams), "_blank");
+     triggerDownload(route("reports.export.csv", exportParams));
   };
   const exportPdf = () => {
-    window.open(route("reports.export.pdf", exportParams), "_blank");
+    triggerDownload(route("reports.export.pdf", exportParams));
   };
   const printView = () => {
     window.open(route("reports.print", exportParams), "_blank");
