@@ -37,33 +37,5 @@ class AppServiceProvider extends ServiceProvider
         // Your existing boot config
         Vite::prefetch(concurrency: 3);
         Schema::defaultStringLength(191);
-
-        // Shared CSRF token for Inertia forms (fixes 419 on Native/ServerSetup)
-        Inertia::share('csrf_token', fn () => csrf_token());
-
-        // Shared desktop connection info for the footer bar (desktop only)
-        Inertia::share('desktopConnection', function () {
-            // Never call Native Settings when not running as desktop
-            if (! env('NATIVEPHP_APP_ID')) {
-                return null;
-            }
-
-            $hostname = NativeSettings::get(
-                'server.hostname',
-                PamelaNetwork::defaultHostname()
-            );
-
-            $ip = NativeSettings::get('server.ip');
-
-            if (! $ip) {
-                return null;
-            }
-
-            return [
-                'hostname'  => $hostname,
-                'ip'        => $ip,
-                'reachable' => PamelaNetwork::isServerReachable($ip, 80),
-            ];
-        });
     }
 }

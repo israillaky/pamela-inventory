@@ -16,7 +16,7 @@ use App\Http\Controllers\{
     SettingsController,
 };
 
-use App\Http\Controllers\Desktop\ServerSetupController;
+//use App\Http\Controllers\Desktop\ServerSetupController;
 
 // Redirect homepage → login
 Route::get('/', fn () => redirect()->route('login'));

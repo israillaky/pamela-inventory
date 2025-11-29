@@ -13,7 +13,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Throwable;
 use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -28,7 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-
 
     /*
     |--------------------------------------------------------------------------
@@ -52,8 +50,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', [
             ActivityLogger::class,
         ]);
-
-
     })
 
     /*
@@ -209,7 +205,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         /*
         |--------------------------------------------------------------------------
-        | 6. Error Reporting → Log into audit_logs (non-debug & non-noise cases)
+        | 6. Error Reporting → Log into audit_logs
+        |    (non-debug & non-noise cases)
         |--------------------------------------------------------------------------
         */
         $exceptions->report(function (Throwable $e) {
@@ -245,9 +242,9 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
     })
-    ->withCommands([
+    /*->withCommands([
         \App\Console\Commands\ConfigureLanEnvironment::class,
         \App\Console\Commands\PruneAuditLogs::class,
-    ])
+    ])*/
 
     ->create();
