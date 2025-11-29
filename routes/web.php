@@ -13,8 +13,10 @@ use App\Http\Controllers\{
     DashboardController,
     UserController,
     AuditLogController,
-    SettingsController
+    SettingsController,
 };
+
+use App\Http\Controllers\Desktop\ServerSetupController;
 
 // Redirect homepage → login
 Route::get('/', fn () => redirect()->route('login'));
@@ -22,6 +24,16 @@ Route::get('/', fn () => redirect()->route('login'));
 require __DIR__.'/auth.php';
 
 // AUTH + VERIFIED
+
+/*
+    // Only relevant in desktop mode; safe to leave here for web
+Route::get('/native/server-setup', [ServerSetupController::class, 'show'])
+->name('native.server-setup.show');
+
+Route::post('/native/server-setup', [ServerSetupController::class, 'store'])
+    ->name('native.server-setup.store');
+*/
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     /* -----------------------------------------------------

@@ -13,6 +13,7 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function boot(): void
     {
+
         $baseUrl = rtrim(config('app.url'), '/');   // uses APP_URL value
 
         Window::open('main')

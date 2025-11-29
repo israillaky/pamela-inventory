@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
 
+
     /*
     |--------------------------------------------------------------------------
     | Middleware
@@ -51,6 +52,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', [
             ActivityLogger::class,
         ]);
+
+
     })
 
     /*
@@ -242,5 +245,9 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
     })
+    ->withCommands([
+        \App\Console\Commands\ConfigureLanEnvironment::class,
+        \App\Console\Commands\PruneAuditLogs::class,
+    ])
 
     ->create();
