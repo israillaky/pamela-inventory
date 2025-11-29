@@ -414,7 +414,7 @@ class ReportsController extends Controller
                 $qty = (int) $r->quantity;
 
                 $unitPrice = (float) ($r->priceSnapshot->unit_price ?? $r->product->price ?? 0);
-                $unitSale  = $r->priceSnapshot->unit_sales_price ?? $r->product->sales_price ?? null;
+                $unitSale  = $r->priceSnapshot->unit_sales_price ?? null;
 
                 $hasSale   = $unitSale && (float) $unitSale > 0 && (float) $unitSale !== $unitPrice;
                 $effective = $hasSale ? (float) $unitSale : $unitPrice;

@@ -236,7 +236,6 @@
                     <th class="text-right">Qty</th>
                     <th class="text-right">Price</th>
                     <th class="text-right">Sales Price</th>
-                    <th class="text-right">Effective Unit</th>
                     <th class="text-right">Amount</th>
                     <th class="text-left">Date</th>
                 </tr>
@@ -255,13 +254,12 @@
                                 —
                             @endif
                         </td>
-                        <td class="text-right">₱{{ $money($row['effective_unit'] ?? 0) }}</td>
                         <td class="text-right">₱{{ $money($row['amount'] ?? 0) }}</td>
                         <td >{{ date('M d, Y', strtotime($row['timestamp'] ?? '')) }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11" class="text-center muted">No records found.</td>
+                        <td colspan="6" class="text-center muted">No records found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -270,7 +268,6 @@
                     <tr class="border-top">
                         <td  class="text-right font-bold">Total:</td>
                         <td class="text-right font-bold">{{ $totals['qty'] ?? 0 }}</td>
-                        <td class="text-right"></td>
                         <td class="text-right"></td>
                         <td class="text-right"></td>
                         <td class="text-right font-bold">₱{{ $money($totals['amount'] ?? 0) }}</td>
