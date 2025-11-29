@@ -315,6 +315,7 @@ export default function ProductsIndex() {
         <form onSubmit={submitAdd} className="space-y-4">
           <FormGroup label="Product Name" error={form.errors.name}>
             <TextInput
+              className="w-full"
               value={form.data.name}
               onChange={(e) => form.setData("name", e.target.value)}
             />
@@ -322,6 +323,7 @@ export default function ProductsIndex() {
 
           <FormGroup label="SKU (optional)" error={form.errors.sku}>
             <TextInput
+            className="w-full"
               value={form.data.sku}
               onChange={(e) => form.setData("sku", e.target.value)}
             />
@@ -375,6 +377,7 @@ export default function ProductsIndex() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormGroup label="Price" error={form.errors.price}>
               <TextInput
+               className="w-full"
                 type="number"
                 value={form.data.price}
                 onChange={(e) => form.setData("price", e.target.value)}
@@ -383,6 +386,7 @@ export default function ProductsIndex() {
 
             <FormGroup label="Sales Price (optional)" error={form.errors.sales_price}>
               <TextInput
+               className="w-full"
                 type="number"
                 value={form.data.sales_price || ""}
                 onChange={(e) => form.setData("sales_price", e.target.value)}
@@ -407,6 +411,7 @@ export default function ProductsIndex() {
           <form onSubmit={submitEdit} className="space-y-4">
             <FormGroup label="Product Name" error={form.errors.name}>
               <TextInput
+               className="w-full"
                 value={form.data.name}
                 onChange={(e) => form.setData("name", e.target.value)}
               />
@@ -414,6 +419,7 @@ export default function ProductsIndex() {
 
             <FormGroup label="SKU" error={form.errors.sku}>
               <TextInput
+               className="w-full"
                 value={form.data.sku}
                 onChange={(e) => form.setData("sku", e.target.value)}
               />
@@ -467,6 +473,7 @@ export default function ProductsIndex() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormGroup label="Price" error={form.errors.price}>
                 <TextInput
+                 className="w-full"
                   type="number"
                   value={form.data.price}
                   onChange={(e) => form.setData("price", e.target.value)}
@@ -475,6 +482,7 @@ export default function ProductsIndex() {
 
               <FormGroup label="Sales Price (optional)" error={form.errors.sales_price}>
                 <TextInput
+                 className="w-full"
                   type="number"
                   value={form.data.sales_price || ""}
                   onChange={(e) => form.setData("sales_price", e.target.value)}

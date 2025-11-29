@@ -260,7 +260,7 @@ class ReportsController extends Controller
             $query = Product::query()->orderBy('name');
 
             if ($paginate) {
-                $paginator = $query->paginate(15)->withQueryString();
+                $paginator = $query->paginate(10)->withQueryString();
                 $items = $paginator->getCollection();
             } else {
                 $items = $query->get();
@@ -335,7 +335,7 @@ class ReportsController extends Controller
             if ($createdBy) $query->where('created_by',$createdBy);
 
             $collection = $paginate
-                ? $query->orderByDesc('created_at')->paginate(15)->withQueryString()
+                ? $query->orderByDesc('created_at')->paginate(10)->withQueryString()
                 : $query->orderByDesc('created_at')->get();
 
             $items = $paginate ? $collection->getCollection() : $collection;
@@ -405,7 +405,7 @@ class ReportsController extends Controller
             if ($createdBy) $query->where('created_by',$createdBy);
 
             $collection = $paginate
-                ? $query->orderByDesc('created_at')->paginate(15)->withQueryString()
+                ? $query->orderByDesc('created_at')->paginate(10)->withQueryString()
                 : $query->orderByDesc('created_at')->get();
 
             $items = $paginate ? $collection->getCollection() : $collection;
@@ -414,7 +414,7 @@ class ReportsController extends Controller
                 $qty = (int) $r->quantity;
 
                 $unitPrice = (float) ($r->priceSnapshot->unit_price ?? $r->product->price ?? 0);
-                $unitSale  = $r->priceSnapshot->unit_sales_price ?? $r->product->sales_price ?? null;
+                $unitSale  = $r->priceSnapshot->unit_sales_price ?? null;
 
                 $hasSale   = $unitSale && (float) $unitSale > 0 && (float) $unitSale !== $unitPrice;
                 $effective = $hasSale ? (float) $unitSale : $unitPrice;

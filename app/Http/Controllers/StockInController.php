@@ -64,14 +64,14 @@ class StockInController extends Controller
         ]);
 
         // Create price snapshot for this Stock In
-        ProductPriceSnapshot::create([
+        /*ProductPriceSnapshot::create([
             'product_id'       => $product->id,
             'stock_in_id'      => $stockIn->id,
             'stock_out_id'     => null,
             'quantity'         => $stockIn->quantity,
             'unit_price'       => $product->price,
             'unit_sales_price' => $product->sales_price, // can be null if not set
-        ]);
+        ]);*/
 
         $this->logActivity(
             'stock_in',
@@ -106,12 +106,12 @@ class StockInController extends Controller
         ]);
 
         // Keep the snapshot quantity in sync with the Stock In
-        $snapshot = ProductPriceSnapshot::where('stock_in_id', $stockIn->id)->first();
+        /*$snapshot = ProductPriceSnapshot::where('stock_in_id', $stockIn->id)->first();
         if ($snapshot) {
             $snapshot->update([
                 'quantity' => $stockIn->quantity,
             ]);
-        }
+        }*/
 
         $this->logActivity(
             'updated',
@@ -143,7 +143,7 @@ class StockInController extends Controller
         );
 
         // Remove related snapshot to avoid orphan records
-        ProductPriceSnapshot::where('stock_in_id', $stockIn->id)->delete();
+        //ProductPriceSnapshot::where('stock_in_id', $stockIn->id)->delete();
 
         $stockIn->delete();
 

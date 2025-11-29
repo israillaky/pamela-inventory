@@ -285,8 +285,6 @@ export default function StockOutIndex() {
         r.price_snapshot?.unit_sales_price ??
         r.product_price_snapshot?.unit_sales_price ??
         null;
-
-    // ❌ no fallback to r.product?.sales_price here
     const raw = fromSnapshot;
     if (raw == null) return null;
 

@@ -167,10 +167,9 @@ export default function ReportsIndex() {
         r.unit_price != null
           ? Number(r.unit_price)
           : Number(r.product?.price || 0);
-      const unitSaleRaw =
-        r.unit_sales_price ?? r.product?.sales_price ?? null;
-      const unitSale =
-        unitSaleRaw != null ? Number(unitSaleRaw) : null;
+     const unitSaleRaw = r.unit_sales_price;
+     const unitSale =
+           unitSaleRaw != null ? Number(unitSaleRaw) : null;
 
       const hasSale =
         unitSale != null &&
@@ -356,45 +355,45 @@ export default function ReportsIndex() {
           align: "right",
         },
         {
-          key: "price",
-          label: "Price",
-          align: "right",
-          render: (r) => {
-            const unitPrice =
-              r.unit_price != null
-                ? Number(r.unit_price)
-                : Number(r.product?.price || 0);
-            const unitSaleRaw =
-              r.unit_sales_price ?? r.product?.sales_price ?? null;
-            const unitSale =
-              unitSaleRaw != null ? Number(unitSaleRaw) : null;
+            key: "price",
+            label: "Price",
+            align: "right",
+            render: (r) => {
+                const unitPrice =
+                r.unit_price != null
+                    ? Number(r.unit_price)
+                    : Number(r.product?.price || 0);
 
-            const hasSale =
-              unitSale != null &&
-              Number.isFinite(unitSale) &&
-              unitSale > 0 &&
-              unitSale !== unitPrice;
+                const unitSaleRaw = r.unit_sales_price;
+                const unitSale =
+                unitSaleRaw != null ? Number(unitSaleRaw) : null;
 
-            if (hasSale) {
-              return (
-                <div className="text-right text-sm">
-                  <div className="text-xs text-gray-400 line-through">
+                const hasSale =
+                unitSale != null &&
+                Number.isFinite(unitSale) &&
+                unitSale > 0 &&
+                unitSale !== unitPrice;
+
+                if (hasSale) {
+                return (
+                    <div className="text-right text-sm">
+                    <div className="text-xs text-gray-400 line-through">
+                        ₱{money(unitPrice)}
+                    </div>
+                    <div className="font-semibold text-emerald-500">
+                        ₱{money(unitSale)}
+                    </div>
+                    </div>
+                );
+                }
+
+                return (
+                <span className="tabular-nums text-sm">
                     ₱{money(unitPrice)}
-                  </div>
-                  <div className="font-semibold text-emerald-500">
-                    ₱{money(unitSale)}
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <span className="tabular-nums text-sm">
-                ₱{money(unitPrice)}
-              </span>
-            );
-          },
-        },
+                </span>
+                );
+            },
+            },
         {
           key: "total",
           label: "Total",
