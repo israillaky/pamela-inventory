@@ -108,6 +108,22 @@ export default function Dashboard() {
     tooltipText: isDark ? "#e5e7eb" : "#111827",
   };
 
+  const userId = auth?.user?.id;
+
+
+  // 🔹 Base report params: cashier auto-filters by created_by
+  const baseReportParams = isCashier && userId
+    ? { created_by: userId }
+    : {};
+
+  const reportUrls = {
+    stock_in: route("reports.index", { ...baseReportParams, tab: "stock_in" }),
+    stock_out: route("reports.index", { ...baseReportParams, tab: "stock_out" }),
+    sales_in: route("reports.index", { ...baseReportParams, tab: "sales_in" }),
+    sales_out: route("reports.index", { ...baseReportParams, tab: "sales_out" }),
+  };
+
+
   return (
     <AuthenticatedLayout header={<h2 className="text-xl font-semibold">Dashboard</h2>}>
       <Head title="Dashboard" />
@@ -121,7 +137,7 @@ export default function Dashboard() {
             title="Total Stock In"
             value={num(totals.stock_in_qty)}
             icon={ArrowDown}
-            href="/reports?tab=stock_in"
+            href={reportUrls.stock_in}
           />
         )}
 
@@ -130,7 +146,7 @@ export default function Dashboard() {
           title="Total Stock Out"
           value={num(totals.stock_out_qty)}
           icon={ArrowUp}
-          href="/reports?tab=stock_out"
+          href={reportUrls.sales_out}
         />
 
         {/* ✦ Admin/Staff/Warehouse Manager Only */}
@@ -139,7 +155,7 @@ export default function Dashboard() {
             title="Total Sales In"
             value={money(totals.sales_in)}
             icon={CircleDollarSign}
-            href="/reports?tab=sales_in"
+            href={reportUrls.sales_in}
           />
         )}
 
@@ -148,7 +164,7 @@ export default function Dashboard() {
           title="Total Sales Out"
           value={money(totals.sales_out)}
           icon={ReceiptText}
-          href="/reports?tab=sales_out"
+          href={reportUrls.sales_out}
         />
       </div>
 
