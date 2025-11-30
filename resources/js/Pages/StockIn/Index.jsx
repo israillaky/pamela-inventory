@@ -167,7 +167,7 @@ export default function StockInIndex() {
       return true;
     }
 
-    showToast(`Unknown barcode / SKU: ${q}`, "error");
+    //showToast(`Unknown barcode / SKU: ${q}`, "error");
     return false;
   };
 
