@@ -482,11 +482,20 @@ export default function ProductsIndex() {
               </FormGroup>
             </div>
 
-            <BarcodePreview
-              png={editProduct.barcode_png}
-              code={editProduct.barcode}
-              name={editProduct.name}
+           <BarcodePreview
+                png={editProduct.barcode_png}
+                code={editProduct.barcode}
+                name={editProduct.name}
+                meta={
+                    [
+                    editProduct.brand?.name,
+                    editProduct.category?.name
+                    ]
+                    .filter(Boolean)
+                    .join(" - ")
+                }
             />
+
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="primary" disabled={form.processing}>

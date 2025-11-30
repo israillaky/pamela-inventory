@@ -2,23 +2,21 @@ import React from "react";
 import html2canvas from "html2canvas";
 import Button from "./Button";
 
-export default function BarcodePreview({ png, code, name }) {
+export default function BarcodePreview({ png, code, name, meta }) {
   if (!png) return null;
 
   const downloadLabel = async () => {
     const el = document.getElementById("barcode-label-area");
     if (!el) return;
 
-    // capture the label DOM into canvas
     const canvas = await html2canvas(el, {
-      backgroundColor: "#ffffff", // keep white label
-      scale: 3,                   // sharper output
+      backgroundColor: "#ffffff",
+      scale: 3,
       useCORS: true,
     });
 
     const dataUrl = canvas.toDataURL("image/png");
 
-    // filename: ProductName-SKU(or barcode).png
     const safeName = (name || "product")
       .replace(/[^a-z0-9]/gi, "_")
       .toLowerCase();
@@ -32,8 +30,7 @@ export default function BarcodePreview({ png, code, name }) {
   };
 
   return (
-    <div className="rounded-xl border border-gpt-300 p-4 dark:border-gpt-700 bg-white ">
-
+    <div className="rounded-xl border border-gpt-300 p-4 dark:border-gpt-700 bg-white">
       {/* THIS is the label we will download */}
       <div
         id="barcode-label-area"
@@ -41,9 +38,15 @@ export default function BarcodePreview({ png, code, name }) {
       >
         {/* Product name above */}
         {name && (
-          <div className="text-center text-lg font-semibold mb-2">
+          <div className="text-center text-lg font-semibold mb-1">
             {name}
           </div>
+        )}
+
+        {meta && (
+            <div className="text-center text-xs text-gray-700 mb-2">
+                {meta}
+            </div>
         )}
 
         {/* Barcode image */}
