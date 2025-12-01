@@ -25,6 +25,23 @@
     @apply relative text-base font-normal font-outfit z-1 bg-gray-50 text-gray-900 dark:bg-[#212121] dark:text-slate-100;
     }
 }
+@layer utilities {
+  /* Horizontal scroll container */
+  .table-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  /* Forces tables to overflow so scrolling appears */
+  .table-minw {
+    min-width: 480px;
+  }
+  .table-r{
+    width: 360px;
+  }
+}
 
 /* ------------------------------
    MENU UTILITIES (converted from @utility)

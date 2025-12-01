@@ -109,6 +109,7 @@ export default function ProductsIndex() {
     form.setData({
       name: p.name || "",
       sku: p.sku || "",
+      barcode: p.barcode || "",
       brand_id: p.brand_id || "",
       category_id: p.category_id || "",
       child_category_id: p.child_category_id || "",
@@ -152,22 +153,43 @@ export default function ProductsIndex() {
       Table Columns
   ----------------------------*/
   const columns = [
-    { key: "name", label: "Name" },
-    { key: "sku", label: "SKU" },
+    {
+        key: "name",
+        label: "Product",
+        render: (p) => (
+          <div className="leading-tight">
+            <div className="text-md font-medium text-gpt-900 dark:text-gpt-100">
+              {p.name || "—"}
+            </div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">
+              {p.sku} • {p.barcode}
+            </div>
+          </div>
+        ),
+      },
     {
       key: "brand",
       label: "Brand",
+      headerClassName: "hidden md:table-cell",
+      cellClassName: "hidden md:table-cell",
       render: (p) => p.brand?.name || "-",
     },
     {
       key: "category",
       label: "Category",
-      render: (p) => p.category?.name || "-",
-    },
-    {
-      key: "child_category",
-      label: "Child",
-      render: (p) => p.child_category?.name || "-",
+      headerClassName: "hidden md:table-cell",
+      cellClassName: "hidden md:table-cell",
+      render: (p) =>
+        (
+          <div className="leading-tight">
+            <div className="text-md font-medium text-gpt-900 dark:text-gpt-100">
+              {p.category?.name || "—"}
+            </div>
+            <div className="text-xs text-gray-400 dark:text-gpt-400">
+              {p.child_category?.name}
+            </div>
+          </div>
+        )
     },
     {
       key: "price",
@@ -216,6 +238,8 @@ export default function ProductsIndex() {
         key: "created_at",
         label: "Created At",
         align: "right",
+        headerClassName: "hidden md:table-cell",
+        cellClassName: "hidden md:table-cell",
         render: (p) => (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'  }) : "-"), // format date
     },
 
@@ -264,13 +288,14 @@ export default function ProductsIndex() {
           placeholder="Search name / sku / barcode..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="md:w-1/3"
+          className="w-full md:w-1/3"
         />
 
         <SelectInput
           value={brandId}
           onChange={(e) => setBrandId(e.target.value)}
-          className="md:w-1/4"
+          className="w-full md:w-1/4"
+
         >
           <option value="">All Brands</option>
           {brands.map((b) => (
@@ -283,7 +308,8 @@ export default function ProductsIndex() {
         <SelectInput
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="md:w-1/4"
+        className="w-full md:w-1/4"
+
         >
           <option value="">All Categories</option>
           {categories.map((c) => (
@@ -293,19 +319,18 @@ export default function ProductsIndex() {
           ))}
         </SelectInput>
 
-        <Button variant="primary" type="button" onClick={openAdd}>
+        <Button variant="primary" type="button" onClick={openAdd} className="w-full md:w-auto">
           + Add Product
         </Button>
       </div>
-
-      {/* Reusable Table */}
-      <Table columns={columns} rows={rows} emptyText="No products found."
-        rowClassName={(p) => {
-            const qty = Number(p.quantity ?? 0);
-            if (qty <= 0) return "bg-red-50 dark:bg-red-900/20";
-            if (qty < 10) return "bg-amber-50 dark:bg-amber-900/20";
-            return "";
-        }} />
+        {/* Reusable Table */}
+        <Table columns={columns} rows={rows} emptyText="No products found."
+            rowClassName={(p) => {
+                const qty = Number(p.quantity ?? 0);
+                if (qty <= 0) return "bg-red-50 dark:bg-red-900/20";
+                if (qty < 10) return "bg-amber-50 dark:bg-amber-900/20";
+                return "";
+            }} />
       <div className="mb-4">
         <Pagination meta={products} />
       </div>

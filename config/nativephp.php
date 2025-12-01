@@ -13,7 +13,9 @@ return [
      * usually in the form of a reverse domain name.
      * For example: com.nativephp.app
      */
-    'app_id' => env('NATIVEPHP_APP_ID'),
+    'app_id'  => env('NATIVEPHP_APP_ID', 'com.pamela.inventory'),
+    'name'    => env('NATIVEPHP_APP_NAME', config('app.name', 'Pamela Inventory')),
+    'author'  => env('NATIVEPHP_APP_AUTHOR', 'Israil Parajes'),
 
     /**
      * If your application allows deep linking, you can specify the scheme

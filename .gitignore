@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# NativePHP / Electron build output
+nativephp/electron/dist/
+nativephp/electron/dist/*

@@ -187,6 +187,15 @@ export default {
                     500: "#38848D",  // your exact active color
                     600: "#2d6a70",  // darker for hover / dark mode
                 },
+                // tailwind.config.js default
+                 screens: {
+                    xs: '480px',    // your custom breakpoint
+                    sm: '640px',
+                    md: '768px',
+                    lg: '1024px',
+                    xl: '1280px',
+                    '2xl': '1536px',
+                },
 
                 "theme-pink": {
                     500: "#ee46bc",

@@ -5,7 +5,7 @@ import Topbar from "./Partials/Topbar";
 export default function AuthenticatedLayout({ header, children }) {
   const [collapsed, setCollapsed] = useState(false);
 
-  // remember sidebar collapsed
+  // remember sidebar collapsed / hidden
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
     if (saved === "1") setCollapsed(true);
@@ -20,7 +20,15 @@ export default function AuthenticatedLayout({ header, children }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-bg-[#eeeeee] text-gpt-900 dark:bg-[#212121] dark:text-gpt-100">
+    <div className="min-h-screen flex bg-[#eeeeee] text-gpt-900 dark:bg-[#212121] dark:text-gpt-100">
+      {/* Mobile overlay when sidebar is open */}
+      {!collapsed && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
+
       <Sidebar collapsed={collapsed} />
 
       <div className="flex-1 flex flex-col">
