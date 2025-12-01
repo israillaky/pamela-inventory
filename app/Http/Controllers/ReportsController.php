@@ -10,33 +10,39 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Throwable;
 
 class ReportsController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        try {
+            // warehouse_manager should NOT access reports
+            abort_unless(in_array(Auth::user()?->role, ['admin', 'staff']), 403);
 
-        $tab = $request->get('tab', 'stock_in');
+            $tab = $request->get('tab', 'stock_in');
 
-        $filters = [
-            'date_from'  => $request->date_from,
-            'date_to'    => $request->date_to,
-            'product_id' => $request->product_id,
-            'created_by' => $request->created_by,
-        ];
+            $filters = [
+                'date_from'  => $request->date_from,
+                'date_to'    => $request->date_to,
+                'product_id' => $request->product_id,
+                'created_by' => $request->created_by,
+            ];
 
-        $data = $this->buildReportData($tab, $filters, paginate: true);
+            $data = $this->buildReportData($tab, $filters, paginate: true);
 
-        return Inertia::render('Reports/Index', [
-            'tab'     => $tab,
-            'filters' => $filters,
-            'rows'    => $data['rows'],      // paginator or simple collection
-            'totals'  => $data['totals'],
-            'footer'  => $data['footer'],
-            'products'=> Product::orderBy('name')->get(['id','name','sku']),
-            'users'   => User::orderBy('name')->get(['id','name']),
-        ]);
+            return Inertia::render('Reports/Index', [
+                'tab'      => $tab,
+                'filters'  => $filters,
+                'rows'     => $data['rows'],   // paginator or collection
+                'totals'   => $data['totals'],
+                'footer'   => $data['footer'],
+                'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
+                'users'    => User::orderBy('name')->get(['id', 'name']),
+            ]);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to load reports.');
+        }
     }
 
     /* -----------------------------------------------------
@@ -44,145 +50,150 @@ class ReportsController extends Controller
     ------------------------------------------------------ */
     public function exportCsv(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        try {
+            // exports limited to admin + staff
+            abort_unless(in_array(Auth::user()?->role, ['admin', 'staff']), 403);
 
-        $tab = $request->tab ?? 'stock_in';
+            $tab = $request->tab ?? 'stock_in';
 
-        $filters = [
-            'date_from'  => $request->date_from,
-            'date_to'    => $request->date_to,
-            'product_id' => $request->product_id,
-            'created_by' => $request->created_by,
-        ];
+            $filters = [
+                'date_from'  => $request->date_from,
+                'date_to'    => $request->date_to,
+                'product_id' => $request->product_id,
+                'created_by' => $request->created_by,
+            ];
 
-        // No pagination for export
-        $data = $this->buildReportData($tab, $filters, paginate: false);
-        $rows = $data['rows'];
+            // No pagination for export
+            $data = $this->buildReportData($tab, $filters, paginate: false);
+            $rows = $data['rows'];
 
-        $filename = 'report_' . $tab . '_' . now()->format('Ymd_His') . '.csv';
+            $filename = 'report_' . $tab . '_' . now()->format('Ymd_His') . '.csv';
 
-        return response()->streamDownload(function () use ($tab, $rows) {
-            $out = fopen('php://output', 'w');
+            return response()->streamDownload(function () use ($tab, $rows) {
+                $out = fopen('php://output', 'w');
 
-            if ($tab === 'inventory') {
-                // Match inventory table in UI
-                fputcsv($out, [
-                    'Product',
-                    'SKU',
-                    'Barcode',
-                    'Remaining Qty',
-                    'Unit Price',
-                    'Unit Sales Price',
-                    'Total @ Price',
-                    'Total @ Sales Price',
-                ]);
-
-                foreach ($rows as $row) {
+                if ($tab === 'inventory') {
+                    // Match inventory table in UI
                     fputcsv($out, [
-                        $row['name'] ?? '',
-                        $row['sku'] ?? '',
-                        $row['barcode'] ?? '',
-                        $row['remaining_qty'] ?? 0,
-                        $row['unit_price'] ?? 0,
-                        $row['unit_sales_price'] ?? 0,
-                        $row['total_value'] ?? 0,
-                        $row['total_value_sales'] ?? 0,
+                        'Product',
+                        'SKU',
+                        'Barcode',
+                        'Remaining Qty',
+                        'Unit Price',
+                        'Unit Sales Price',
+                        'Total @ Price',
+                        'Total @ Sales Price',
                     ]);
-                }
-            } elseif ($tab === 'sales_in') {
-                // Match Sales In table
-                fputcsv($out, [
-                    'Product',
-                    'SKU',
-                    'Barcode',
-                    'Qty',
-                    'Unit Price',
-                    'Unit Sales Price',
-                    'Total Amount',
-                    'Total Sale Amount',
-                    'Date',
-                    'By',
-                    'Note',
-                ]);
 
-                foreach ($rows as $row) {
-                    $p = $row['product'] ?? [];
+                    foreach ($rows as $row) {
+                        fputcsv($out, [
+                            $row['name'] ?? '',
+                            $row['sku'] ?? '',
+                            $row['barcode'] ?? '',
+                            $row['remaining_qty'] ?? 0,
+                            $row['unit_price'] ?? 0,
+                            $row['sales_price'] ?? 0,
+                            $row['total_value'] ?? 0,
+                            $row['total_value_sales'] ?? 0,
+                        ]);
+                    }
+                } elseif ($tab === 'sales_in') {
+                    // Match Sales In table
                     fputcsv($out, [
-                        $p['name'] ?? '',
-                        $p['sku'] ?? '',
-                        $p['barcode'] ?? '',
-                        $row['quantity'] ?? 0,
-                        $row['unit_price'] ?? 0,
-                        $row['unit_sales_price'] ?? 0,
-                        $row['amount'] ?? 0,
-                        $row['sale_amount'] ?? 0,
-                        $row['timestamp'] ?? '',
-                        $row['user']['name'] ?? $row['created_by'] ?? '',
-                        $row['note'] ?? '',
+                        'Product',
+                        'SKU',
+                        'Barcode',
+                        'Qty',
+                        'Unit Price',
+                        'Unit Sales Price',
+                        'Total Amount',
+                        'Total Sale Amount',
+                        'Date',
+                        'By',
+                        'Note',
                     ]);
-                }
-            } elseif ($tab === 'sales_out') {
-                // Match Sales Out table
-                fputcsv($out, [
-                    'Product',
-                    'SKU',
-                    'Barcode',
-                    'Qty',
-                    'Unit Price',
-                    'Unit Sales Price',
-                    'Effective Unit',
-                    'Amount',
-                    'Date',
-                    'By',
-                    'Note',
-                ]);
 
-                foreach ($rows as $row) {
-                    $p = $row['product'] ?? [];
+                    foreach ($rows as $row) {
+                        $p = $row['product'] ?? [];
+                        fputcsv($out, [
+                            $p['name'] ?? '',
+                            $p['sku'] ?? '',
+                            $p['barcode'] ?? '',
+                            $row['quantity'] ?? 0,
+                            $row['unit_price'] ?? 0,
+                            $row['unit_sales_price'] ?? 0,
+                            $row['amount'] ?? 0,
+                            $row['sale_amount'] ?? 0,
+                            $row['timestamp'] ?? '',
+                            $row['user']['name'] ?? $row['created_by'] ?? '',
+                            $row['note'] ?? '',
+                        ]);
+                    }
+                } elseif ($tab === 'sales_out') {
+                    // Match Sales Out table
                     fputcsv($out, [
-                        $p['name'] ?? '',
-                        $p['sku'] ?? '',
-                        $p['barcode'] ?? '',
-                        $row['quantity'] ?? 0,
-                        $row['unit_price'] ?? 0,
-                        $row['unit_sales_price'] ?? 0,
-                        $row['effective_unit'] ?? 0,
-                        $row['amount'] ?? 0,
-                        $row['timestamp'] ?? '',
-                        $row['user']['name'] ?? $row['created_by'] ?? '',
-                        $row['note'] ?? '',
+                        'Product',
+                        'SKU',
+                        'Barcode',
+                        'Qty',
+                        'Unit Price',
+                        'Unit Sales Price',
+                        'Effective Unit',
+                        'Amount',
+                        'Date',
+                        'By',
+                        'Note',
                     ]);
-                }
-            } else {
-                // stock_in and stock_out (no price columns in UI)
-                fputcsv($out, [
-                    'Product',
-                    'SKU',
-                    'Barcode',
-                    'Qty',
-                    'Date',
-                    'By',
-                    'Note',
-                ]);
 
-                foreach ($rows as $row) {
-                    $p = $row['product'] ?? [];
+                    foreach ($rows as $row) {
+                        $p = $row['product'] ?? [];
+                        fputcsv($out, [
+                            $p['name'] ?? '',
+                            $p['sku'] ?? '',
+                            $p['barcode'] ?? '',
+                            $row['quantity'] ?? 0,
+                            $row['unit_price'] ?? 0,
+                            $row['unit_sales_price'] ?? 0,
+                            $row['effective_unit'] ?? 0,
+                            $row['amount'] ?? 0,
+                            $row['timestamp'] ?? '',
+                            $row['user']['name'] ?? $row['created_by'] ?? '',
+                            $row['note'] ?? '',
+                        ]);
+                    }
+                } else {
+                    // stock_in and stock_out (no extra price columns in UI)
                     fputcsv($out, [
-                        $p['name'] ?? '',
-                        $p['sku'] ?? '',
-                        $p['barcode'] ?? '',
-                        $row['quantity'] ?? 0,
-                        $row['timestamp'] ?? '',
-                        $row['user']['name'] ?? $row['created_by'] ?? '',
-                        $row['note'] ?? '',
+                        'Product',
+                        'SKU',
+                        'Barcode',
+                        'Qty',
+                        'Date',
+                        'By',
+                        'Note',
                     ]);
-                }
-            }
 
-            fclose($out);
-        }, $filename, [
-            'Content-Type' => 'text/csv',
-        ]);
+                    foreach ($rows as $row) {
+                        $p = $row['product'] ?? [];
+                        fputcsv($out, [
+                            $p['name'] ?? '',
+                            $p['sku'] ?? '',
+                            $p['barcode'] ?? '',
+                            $row['quantity'] ?? 0,
+                            $row['timestamp'] ?? '',
+                            $row['user']['name'] ?? $row['created_by'] ?? '',
+                            $row['note'] ?? '',
+                        ]);
+                    }
+                }
+
+                fclose($out);
+            }, $filename, [
+                'Content-Type' => 'text/csv',
+            ]);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to export CSV report.');
+        }
     }
 
     /* -----------------------------------------------------
@@ -190,30 +201,34 @@ class ReportsController extends Controller
     ------------------------------------------------------ */
     public function exportPdf(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, ['admin', 'staff']), 403);
 
-        $tab = $request->tab ?? 'stock_in';
+            $tab = $request->tab ?? 'stock_in';
 
-        $filters = [
-            'date_from'  => $request->date_from,
-            'date_to'    => $request->date_to,
-            'product_id' => $request->product_id,
-            'created_by' => $request->created_by,
-        ];
+            $filters = [
+                'date_from'  => $request->date_from,
+                'date_to'    => $request->date_to,
+                'product_id' => $request->product_id,
+                'created_by' => $request->created_by,
+            ];
 
-        $data = $this->buildReportData($tab, $filters, paginate: false);
+            $data = $this->buildReportData($tab, $filters, paginate: false);
 
-        $pdf = Pdf::loadView('reports.pdf', [
-            'tab'     => $tab,
-            'filters' => $filters,
-            'rows'    => $data['rows'],   // same structure as UI
-            'totals'  => $data['totals'],
-            'footer'  => $data['footer'],
-        ])->setPaper('A4', 'landscape');
+            $pdf = Pdf::loadView('reports.pdf', [
+                'tab'     => $tab,
+                'filters' => $filters,
+                'rows'    => $data['rows'],
+                'totals'  => $data['totals'],
+                'footer'  => $data['footer'],
+            ])->setPaper('A4', 'landscape');
 
-        $filename = 'report_' . $tab . '_' . now()->format('Ymd_His') . '.pdf';
+            $filename = 'report_' . $tab . '_' . now()->format('Ymd_His') . '.pdf';
 
-        return $pdf->download($filename);
+            return $pdf->download($filename);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to export PDF report.');
+        }
     }
 
     /* -----------------------------------------------------
@@ -221,30 +236,35 @@ class ReportsController extends Controller
     ------------------------------------------------------ */
     public function print(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin', 'staff', 'warehouse_manager']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, ['admin', 'staff']), 403);
 
-        $tab = $request->tab ?? 'stock_in';
+            $tab = $request->tab ?? 'stock_in';
 
-        $filters = [
-            'date_from'  => $request->date_from,
-            'date_to'    => $request->date_to,
-            'product_id' => $request->product_id,
-            'created_by' => $request->created_by,
-        ];
+            $filters = [
+                'date_from'  => $request->date_from,
+                'date_to'    => $request->date_to,
+                'product_id' => $request->product_id,
+                'created_by' => $request->created_by,
+            ];
 
-        $data = $this->buildReportData($tab, $filters, paginate: false);
+            $data = $this->buildReportData($tab, $filters, paginate: false);
 
-        return view('reports.print', [
-            'tab'     => $tab,
-            'filters' => $filters,
-            'rows'    => $data['rows'],   // same as UI + CSV + PDF
-            'totals'  => $data['totals'],
-            'footer'  => $data['footer'],
-        ]);
+            return view('reports.print', [
+                'tab'     => $tab,
+                'filters' => $filters,
+                'rows'    => $data['rows'],
+                'totals'  => $data['totals'],
+                'footer'  => $data['footer'],
+            ]);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to load printable report.');
+        }
     }
 
     /* -----------------------------------------------------
        CORE REPORT BUILDER
+       (logic unchanged, only used internally)
     ------------------------------------------------------ */
     protected function buildReportData(string $tab, array $filters, bool $paginate = true): array
     {
@@ -273,11 +293,19 @@ class ReportsController extends Controller
 
                 $remaining = max($in - $out, 0);
 
-                $price     = (float) $product->price;
-                $salePrice = $product->sales_price !== null ? (float) $product->sales_price : null;
+                $price = (float) $product->price;
 
-                $totalVal       = $remaining * $price;
-                $totalValSales  = $remaining * ($salePrice !== null && $salePrice > 0 ? $salePrice : $price);
+                // Only treat as "has sales price" if > 0
+                $salePrice = ($product->sales_price !== null && $product->sales_price > 0)
+                    ? (float) $product->sales_price
+                    : null;
+
+                $totalVal = $remaining * $price;
+
+                // If there is no valid sales price, don't compute a sales total
+                $totalValSales = $salePrice !== null
+                    ? $remaining * $salePrice
+                    : null;
 
                 return [
                     'id'                => $product->id,
@@ -288,9 +316,9 @@ class ReportsController extends Controller
                     'price'             => $price,
                     'sales_price'       => $salePrice,
                     'unit_price'        => $price,
-                    'unit_sales_price'  => $salePrice,
+                    'unit_sales_price'  => $salePrice,       // stays null if no sales price
                     'total_value'       => $totalVal,
-                    'total_value_sales' => $totalValSales,
+                    'total_value_sales' => $totalValSales,   // null when no sales price
                 ];
             });
 
@@ -298,13 +326,15 @@ class ReportsController extends Controller
                 'total_products'        => $rows->count(),
                 'remaining_qty'         => $rows->sum('remaining_qty'),
                 'inventory_value'       => $rows->sum('total_value'),
+                // sum() will treat null as 0 → only products with sales price contribute
                 'inventory_value_sales' => $rows->sum('total_value_sales'),
             ];
 
             $footer = [
                 'total_products'    => $rows->count(),
                 'total_price'       => $rows->sum('unit_price'),
-                'total_sales_price' => $rows->sum(fn($r) => $r['unit_sales_price'] ?? 0),
+                // again, only rows with non-null unit_sales_price contribute
+                'total_sales_price' => $rows->sum(fn ($r) => $r['unit_sales_price'] ?? 0),
             ];
 
             if ($paginate) {
@@ -327,12 +357,12 @@ class ReportsController extends Controller
            STOCK IN + SALES IN
         ---------------------------------------------- */
         if ($tab === 'stock_in' || $tab === 'sales_in') {
-            $query = StockIn::with(['product','creator','priceSnapshot']);
+            $query = StockIn::with(['product', 'creator', 'priceSnapshot']);
 
-            if ($dateFrom) $query->whereDate('created_at','>=',$dateFrom);
-            if ($dateTo)   $query->whereDate('created_at','<=',$dateTo);
-            if ($productId) $query->where('product_id',$productId);
-            if ($createdBy) $query->where('created_by',$createdBy);
+            if ($dateFrom)   $query->whereDate('created_at', '>=', $dateFrom);
+            if ($dateTo)     $query->whereDate('created_at', '<=', $dateTo);
+            if ($productId)  $query->where('product_id', $productId);
+            if ($createdBy)  $query->where('created_by', $createdBy);
 
             $collection = $paginate
                 ? $query->orderByDesc('created_at')->paginate(15)->withQueryString()
@@ -397,12 +427,12 @@ class ReportsController extends Controller
            STOCK OUT + SALES OUT
         ---------------------------------------------- */
         if ($tab === 'stock_out' || $tab === 'sales_out') {
-            $query = StockOut::with(['product','creator','priceSnapshot']);
+            $query = StockOut::with(['product', 'creator', 'priceSnapshot']);
 
-            if ($dateFrom) $query->whereDate('created_at','>=',$dateFrom);
-            if ($dateTo)   $query->whereDate('created_at','<=',$dateTo);
-            if ($productId) $query->where('product_id',$productId);
-            if ($createdBy) $query->where('created_by',$createdBy);
+            if ($dateFrom)   $query->whereDate('created_at', '>=', $dateFrom);
+            if ($dateTo)     $query->whereDate('created_at', '<=', $dateTo);
+            if ($productId)  $query->where('product_id', $productId);
+            if ($createdBy)  $query->where('created_by', $createdBy);
 
             $collection = $paginate
                 ? $query->orderByDesc('created_at')->paginate(15)->withQueryString()
@@ -422,7 +452,7 @@ class ReportsController extends Controller
                 $amount = $tab === 'sales_out' ? $qty * $effective : 0;
 
                 return [
-                    'id'       => $r->id,
+                    'id' => $r->id,
                     'product' => [
                         'id'          => $r->product->id,
                         'name'        => $r->product->name,
@@ -464,6 +494,7 @@ class ReportsController extends Controller
             ];
         }
 
+        // Fallback if tab is unknown
         return [
             'rows'   => [],
             'totals' => [],

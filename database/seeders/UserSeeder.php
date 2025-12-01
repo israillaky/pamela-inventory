@@ -33,6 +33,13 @@ class UserSeeder extends Seeder
                 'role' => 'warehouse_manager',
             ],
             [
+                'name' => 'Warehouse Staff',
+                'username' => 'warehouse_staff',
+                'email' => 'warehousestaff@pamelainventory.test',
+                'password' => Hash::make('password'),
+                'role' => 'warehouse_staff',
+            ],
+            [
                 'name' => 'Cashier',
                 'username' => 'cashier',
                 'email' => 'cashier@pamelainventory.test',

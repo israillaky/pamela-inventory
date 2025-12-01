@@ -241,18 +241,23 @@ export default function StockOutIndex() {
   /* ---------------------------
       Inline edit existing rows
   ----------------------------*/
-  const updateQty = (row, qty) => {
+    const updateQty = (row, qty) => {
     router.put(
-      route("stock-out.update", row.id),
-      {
+        route("stock-out.update", row.id),
+        {
         product_id: row.product_id,
         quantity: qty,
         note: row.note || "",
         timestamp: row.timestamp || row.created_at,
-      },
-      { preserveScroll: true }
+        },
+        {
+        preserveScroll: true,
+        onError: (errors) => {
+            console.error("Update qty failed", errors);
+        },
+        }
     );
-  };
+    };
 
   const destroyRow = (id) => {
     if (!confirm("Delete this Stock Out record?")) return;
@@ -261,6 +266,7 @@ export default function StockOutIndex() {
 
   const [editingQtyId, setEditingQtyId] = useState(null);
   const [draftQty, setDraftQty] = useState({});
+  const committingQtyRef = useRef(false); // 👈 NEW
 
   const rows = stockOuts?.data || [];
 
@@ -346,6 +352,29 @@ export default function StockOutIndex() {
     return { saleSubtotal, regularSubtotal, finalTotal, totalQty }; // 👈 include
   }, [rows]);
 
+    const commitQtyChange = (row, rawValue) => {
+        if (!row) return;
+        if (committingQtyRef.current) return; // guard
+
+        let v = Number(rawValue || 1);
+        if (!Number.isFinite(v) || v < 1) v = 1;
+
+        // No change → just close editor
+        if (v === Number(row.quantity)) {
+            setEditingQtyId(null);
+            return;
+        }
+
+        committingQtyRef.current = true;
+
+        updateQty(row, v);
+        setEditingQtyId(null);
+
+        setTimeout(() => {
+            committingQtyRef.current = false;
+        }, 0);
+    };
+
   /* ---------------------------
       Columns
   ----------------------------*/
@@ -383,15 +412,22 @@ export default function StockOutIndex() {
               className="w-20 rounded-md border border-gpt-300 bg-white px-2 py-1 text-sm text-center
                          dark:border-gpt-700 dark:bg-gpt-800 dark:text-gpt-100"
               value={draftQty[r.id] ?? r.quantity}
-              onChange={(e) =>
-                setDraftQty((p) => ({ ...p, [r.id]: e.target.value }))
-              }
               autoFocus
-              onBlur={(e) => {
-                const v = Number(e.target.value || 1);
-                if (v !== r.quantity) updateQty(r, v);
-                setEditingQtyId(null);
-              }}
+                onChange={(e) =>
+                setDraftQty((prev) => ({ ...prev, [r.id]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitQtyChange(r, e.currentTarget.value); // ENTER = update
+                } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    setEditingQtyId(null); // cancel
+                }
+                }}
+                onBlur={(e) => {
+                commitQtyChange(r, e.target.value); // BLUR = update
+                }}
             />
           );
         },

@@ -8,14 +8,18 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        @php
+       @php
             $settings = app(\App\Services\SettingsService::class)->all();
             $logo = $settings['company_logo'] ?? null;
+
+            // Default fallback logo
+            $defaultLogo = asset('assets/logo/pamelas-logo.png');
+
+            // Use custom logo if it exists, otherwise fallback
+            $favicon = $defaultLogo;
         @endphp
 
-        @if ($logo)
-            <link rel="icon" type="image/png" href="{{ $logo }}">
-        @endif
+        <link rel="icon" type="image/png" href="{{ $favicon }}">
 
 
         <!-- Scripts -->

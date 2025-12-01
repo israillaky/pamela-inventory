@@ -19,7 +19,7 @@ const nav = [
         name: "Dashboard",
         icon: Home,
         href: route("dashboard"),
-        roles: ["admin", "staff", "warehouse_manager", "cashier"],
+        roles: ["admin", "staff", "warehouse_manager", "cashier", 'warehouse_staff'],
     },
     {
         name: "Products",
@@ -31,13 +31,13 @@ const nav = [
         name: "Brands",
         icon: Tag,
         href: route("brands.index"),
-        roles: ["admin","staff","warehouse_manager"],
+        roles: ["admin","staff"],
     },
     {
         name: "Categories",
         icon: Layers,
         href: route("categories.index"),
-        roles: ["admin", "staff", "warehouse_manager"],
+        roles: ["admin", "staff"],
     },
     {
         name: "Stock In",
@@ -49,13 +49,13 @@ const nav = [
         name: "Stock Out",
         icon: Boxes,
         href: route("stock-out.index"),
-        roles: ["admin","staff","warehouse_manager","cashier"],
+        roles: ["admin","staff","warehouse_manager","cashier", 'warehouse_staff'],
     },
     {
         name: "Reports",
         icon: FileChartColumn,
         href: route("reports.index"),
-        roles: ["admin","staff","warehouse_manager"],
+        roles: ["admin","staff"],
     },
     {
         name: "Users",

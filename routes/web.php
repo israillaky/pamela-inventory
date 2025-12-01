@@ -40,7 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         DASHBOARD — all roles
     ----------------------------------------------------- */
     Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->middleware('role:admin,staff,warehouse_manager,cashier')
+        ->middleware('role:admin,staff,warehouse_manager,cashier,warehouse_staff')
         ->name('dashboard');
 
 
@@ -69,8 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ADMIN + STAFF + WAREHOUSE MANAGER — FULL CRUD MODULES
         Brands, Categories, Child Categories, Products, Reports
     ----------------------------------------------------- */
-    Route::middleware(['role:admin,staff,warehouse_manager'])->group(function () {
-
+    Route::middleware(['role:admin,staff'])->group(function () {
         // Brands CRUD
         Route::resource('brands', BrandController::class)
             ->only(['index','store','update','destroy']);
@@ -101,11 +100,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::delete('/child-categories/{childCategory}', [ChildCategoryController::class, 'destroy'])
             ->name('child-categories.destroy');
+    });
 
+     Route::middleware(['role:admin,staff,warehouse_manager'])->group(function () {
         // Products CRUD + view
         Route::resource('products', ProductController::class)
             ->only(['index','store','update','destroy']);
+    });
 
+
+    Route::middleware(['role:admin,staff'])->group(function () {
         // Reports (view + export + print)
         Route::get('/reports', [ReportsController::class, 'index'])
             ->name('reports.index');
@@ -118,7 +122,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/reports/print', [ReportsController::class, 'print'])
             ->name('reports.print');
+
     });
+
 
 
     /* -----------------------------------------------------
@@ -133,6 +139,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/stock-in/products/search', [StockInController::class, 'searchProducts'])
             ->name('stock-in.products.search');
 
+    });
+
+    /* -----------------------------------------------------
+        ADMIN + STAFF + WAREHOUSE MANAGER — STOCK IN/OUT CRUD
+    ----------------------------------------------------- */
+    Route::middleware(['role:admin,staff,warehouse_manager', 'warehouse_staff' ])->group(function () {
+
+
         // Stock Out CRUD (full for these roles)
         Route::resource('stock-out', StockOutController::class)
             ->only(['index','store','update','destroy'])
@@ -142,18 +156,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('stock-out.products.search');
     });
 
-
     /* -----------------------------------------------------
         CASHIER — STOCK OUT ONLY (index + store + search)
         IMPORTANT: no duplicate resource routes
     ----------------------------------------------------- */
-    Route::middleware(['role:admin,staff,warehouse_manager,cashier'])->group(function () {
+    Route::middleware(['role:admin,staff,warehouse_manager,warehouse_staff,cashier'])->group(function () {
 
         Route::get('/stock-out', [StockOutController::class, 'index'])
             ->name('stock-out.index');
 
-        Route::post('/stock-out', [StockOutController::class, 'store'])
-            ->name('stock-out.store');
+               Route::resource('stock-out', StockOutController::class)
+            ->only(['index','store','update'])
+            ->names('stock-out');
 
         Route::get('/stock-out/products/search', [StockOutController::class, 'searchProducts'])
             ->name('stock-out.products.search');

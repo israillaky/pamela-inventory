@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $role = Auth::user()->role;
         $userId = Auth::id();
 
-        abort_unless(in_array($role, ['admin','staff','warehouse_manager','cashier']), 403);
+        abort_unless(in_array($role, ['admin','staff','warehouse_manager','cashier', 'warehouse_staff']), 403);
 
         /* ============================================================
             ROLE LOGIC

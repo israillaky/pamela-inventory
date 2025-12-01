@@ -7,11 +7,11 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ChildCategory;
 use App\Traits\LogActivityTrait;
-
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -19,125 +19,166 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-         abort_unless(in_array(Auth::user()?->role, ['admin','staff','warehouse_manager','cashier']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, [
+                'admin', 'staff', 'warehouse_manager', 'cashier'
+            ]), 403);
 
-        $filters = $request->only(['search', 'brand_id', 'category_id']);
+            $filters = $request->only(['search', 'brand_id', 'category_id']);
 
-        $products = Product::with(['brand','category','childCategory'])
-            ->when($filters['search'] ?? null, function($q, $s){
-                $q->where('name','like',"%$s%")
-                  ->orWhere('sku','like',"%$s%")
-                  ->orWhere('barcode','like',"%$s%");
-            })
-            ->when($filters['brand_id'] ?? null, fn($q,$id)=>$q->where('brand_id',$id))
-            ->when($filters['category_id'] ?? null, fn($q,$id)=>$q->where('category_id',$id))
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            $products = Product::with(['brand', 'category', 'childCategory'])
+                ->when($filters['search'] ?? null, function ($q, $s) {
+                    $q->where('name', 'like', "%$s%")
+                      ->orWhere('sku', 'like', "%$s%")
+                      ->orWhere('barcode', 'like', "%$s%");
+                })
+                ->when($filters['brand_id'] ?? null, fn ($q, $id) => $q->where('brand_id', $id))
+                ->when($filters['category_id'] ?? null, fn ($q, $id) => $q->where('category_id', $id))
+                ->latest()
+                ->paginate(10)
+                ->withQueryString();
 
-        $products->getCollection()->transform(function ($p){
-            $p->quantity = $p->quantity;
-            $p->barcode_png = ProductService::barcodePng($p->barcode);
-            return $p;
-        });
+            $products->getCollection()->transform(function ($p) {
+                $p->quantity    = $p->quantity; // keep as-is for now
+                $p->barcode_png = ProductService::barcodePng($p->barcode);
+                return $p;
+            });
 
-
-
-        return Inertia::render('Products/Index', [
-            'products' => $products,
-            'filters' => $filters,
-            'brands' => Brand::all(),
-            'categories' => Category::with('childCategories')->get()
-        ]);
+            return Inertia::render('Products/Index', [
+                'products'   => $products,
+                'filters'    => $filters,
+                'brands'     => Brand::all(),
+                'categories' => Category::with('childCategories')->get(),
+            ]);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to load products.');
+        }
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return Inertia::render('Products/Form', [
-            'mode' => 'create',
-            'brands' => Brand::all(),
-            'categories' => Category::with('childCategories')->get()
-        ]);
+        try {
+            // same permissions as store/edit/update/destroy
+            abort_unless(in_array(Auth::user()?->role, [
+                'admin', 'staff', 'warehouse_manager'
+            ]), 403);
+
+            return Inertia::render('Products/Form', [
+                'mode'       => 'create',
+                'brands'     => Brand::all(),
+                'categories' => Category::with('childCategories')->get(),
+            ]);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to open create product form.');
+        }
     }
 
     public function store(Request $request)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin','staff','warehouse_manager']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, [
+                'admin', 'staff', 'warehouse_manager'
+            ]), 403);
 
-        $data = $request->validate([
-            'name'               => 'required|string|max:255',
-            'sku'                => 'nullable|string|unique:products,sku',
-            'brand_id'           => 'required|exists:brands,id',
-            'category_id'        => 'required|exists:categories,id',
-            'child_category_id'  => 'nullable|exists:child_categories,id',
-            'price'              => 'required|numeric|min:0',
-            'sales_price'        => 'nullable|numeric|min:0',
-        ]);
+            $data = $request->validate([
+                'name'               => 'required|string|max:255',
+                'sku'                => 'nullable|string|unique:products,sku',
+                'brand_id'           => 'required|exists:brands,id',
+                'category_id'        => 'required|exists:categories,id',
+                'child_category_id'  => 'nullable|exists:child_categories,id',
+                'price'              => 'required|numeric|min:0',
+                'sales_price'        => 'nullable|numeric|min:0',
+            ]);
 
-        $data['created_by'] = Auth::id();
+            $data['created_by'] = Auth::id();
 
-        $product = Product::create($data);
+            $product = Product::create($data);
 
-        $this->logActivity(
-            'created',
-            'products',
-            "Created product: {$product->name} (ID: {$product->id})"
-        );
+            $this->logActivity(
+                'created',
+                'products',
+                "Created product: {$product->name} (ID: {$product->id})"
+            );
 
-        return redirect()->route('products.index')
-            ->with('success','Product created');
+            return redirect()
+                ->route('products.index')
+                ->with('success', 'Product created');
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to create product.');
+        }
     }
 
-    public function edit(Product $product)
+    public function edit(Request $request, Product $product)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin','staff','warehouse_manager']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, [
+                'admin', 'staff', 'warehouse_manager'
+            ]), 403);
 
-        $product->barcode_png = ProductService::barcodePng($product->barcode);
+            $product->barcode_png = ProductService::barcodePng($product->barcode);
 
-        return Inertia::render('Products/Form', [
-            'mode' => 'edit',
-            'product' => $product,
-            'brands' => Brand::all(),
-            'categories' => Category::with('childCategories')->get(),
-        ]);
+            return Inertia::render('Products/Form', [
+                'mode'       => 'edit',
+                'product'    => $product,
+                'brands'     => Brand::all(),
+                'categories' => Category::with('childCategories')->get(),
+            ]);
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to open edit product form.');
+        }
     }
 
     public function update(Request $request, Product $product)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin','staff','warehouse_manager']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, [
+                'admin', 'staff', 'warehouse_manager'
+            ]), 403);
 
-        $data = $request->validate([
-            'name'               => 'required|string|max:255',
-            'sku'                => 'required|string|unique:products,sku,' . $product->id,
-            'brand_id'           => 'required|exists:brands,id',
-            'category_id'        => 'required|exists:categories,id',
-            'child_category_id'  => 'nullable|exists:child_categories,id',
-            'price'              => 'required|numeric|min:0',
-            'sales_price'        => 'nullable|numeric|min:0',
-        ]);
+            $data = $request->validate([
+                'name'               => 'required|string|max:255',
+                'sku'                => 'required|string|unique:products,sku,' . $product->id,
+                'brand_id'           => 'required|exists:brands,id',
+                'category_id'        => 'required|exists:categories,id',
+                'child_category_id'  => 'nullable|exists:child_categories,id',
+                'price'              => 'required|numeric|min:0',
+                'sales_price'        => 'nullable|numeric|min:0',
+            ]);
 
-        $product->update($data);
-        $this->logActivity(
-            'updated',
-            'products',
-            "Updated product: {$product->name} (ID: {$product->id})"
-        );
+            $product->update($data);
 
-        return redirect()->route('products.index')
-            ->with('success','Product updated');
+            $this->logActivity(
+                'updated',
+                'products',
+                "Updated product: {$product->name} (ID: {$product->id})"
+            );
+
+            return redirect()
+                ->route('products.index')
+                ->with('success', 'Product updated');
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to update product.');
+        }
     }
 
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
-        abort_unless(in_array(Auth::user()?->role, ['admin','staff','warehouse_manager']), 403);
+        try {
+            abort_unless(in_array(Auth::user()?->role, [
+                'admin', 'staff', 'warehouse_manager'
+            ]), 403);
 
-        $this->logActivity(
-            'deleted',
-            'products',
-            "Deleted product: {$product->name} (ID: {$product->id})"
-        );
+            $this->logActivity(
+                'deleted',
+                'products',
+                "Deleted product: {$product->name} (ID: {$product->id})"
+            );
 
-        $product->delete();
-        return back()->with('success','Product deleted');
+            $product->delete();
+
+            return back()->with('success', 'Product deleted');
+        } catch (Throwable $e) {
+            return $this->handleException($request, $e, 'Unable to delete product.');
+        }
     }
 }
