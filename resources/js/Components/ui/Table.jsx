@@ -35,12 +35,12 @@ export default function Table({
       <div className="table-r inline-block min-w-full align-middle rounded-t-lg border border-b-1 border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900">
         {/* ✅ min-w-max so wide tables scroll instead of squishing */}
         <table className="min-w-max w-full text-sm">
-          <thead className="bg-gpt-50 dark:bg-gpt-900">
+          <thead className="bg-gray-100 dark:bg-gpt-900">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-3 py-2 font-semibold text-gray-700 dark:text-gpt-200 ${headAlignClass(
+                  className={`px-3 py-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:text-gpt-200 dark:border-gpt-700 dark:bg-gpt-900 ${headAlignClass(
                     col.align
                   )} ${col.className || ""}`}
                 >

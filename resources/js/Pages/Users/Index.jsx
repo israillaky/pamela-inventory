@@ -88,15 +88,15 @@ export default function UsersIndex() {
       </div>
 
       {/* Plain table (no custom Table component) */}
-      <div className="overflow-x-auto   rounded-t-lg border border-b-1 border-gray-100 dark:border-gpt-700 bg-white dark:bg-gpt-900 shadow-theme-xs">
+      <div className="overflow-x-auto   rounded-t-lg border border-b-1 border-gray-200 dark:border-gpt-700 bg-white dark:bg-gpt-900 shadow-theme-xs">
         <table className="min-w-full text-sm">
           <thead className="bg-gpt-50 dark:bg-gpt-900 text-gpt-600 dark:text-gpt-300">
             <tr>
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Username</th>
-              <th className="px-4 py-3 text-left font-medium">Email</th>
-              <th className="px-4 py-3 text-left font-medium">Role</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-3 py-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:text-gpt-200 dark:border-gpt-700 dark:bg-gpt-900 ">Name</th>
+              <th className="px-3 py-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:text-gpt-200 dark:border-gpt-700 dark:bg-gpt-900">Username</th>
+              <th className="px-3 py-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:text-gpt-200 dark:border-gpt-700 dark:bg-gpt-900">Email</th>
+              <th className="px-3 py-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:text-gpt-200 dark:border-gpt-700 dark:bg-gpt-900">Role</th>
+              <th className="px-3 py-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:text-gpt-200 dark:border-gpt-700 dark:bg-gpt-900">Actions</th>
             </tr>
           </thead>
 
