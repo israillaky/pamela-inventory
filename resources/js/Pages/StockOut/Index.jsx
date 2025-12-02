@@ -593,9 +593,9 @@ export default function StockOutIndex() {
       )}
 
       {/* Scan/Search + Qty + Add */}
-      <div className="mb-2 w-full max-w-3xl">
-        <div className="flex items-stretch gap-2">
-          <div className="relative flex-1">
+        <div className="mb-2 w-full max-w-3xl">
+          <div className="flex flex-col gap-2 md:flex-row md:items-stretch">
+            <div className="relative flex-1">
             <TextInput
               ref={inputRef}
               value={query}
@@ -655,27 +655,29 @@ export default function StockOutIndex() {
             )}
           </div>
 
-          <TextInput
-            ref={qtyRef}
-            type="number"
-            min="1"
-            value={addForm.data.quantity}
-            onChange={(e) =>
-              addForm.setData("quantity", Number(e.target.value || 1))
-            }
-            onKeyDown={onQtyKeyDown}
-            className="w-24 h-11 text-center"
-            title="Quantity"
-          />
+         <div className="flex gap-2 md:w-auto">
+            <TextInput
+                ref={qtyRef}
+                type="number"
+                min="1"
+                value={addForm.data.quantity}
+                onChange={(e) =>
+                addForm.setData("quantity", Number(e.target.value || 1))
+                }
+                onKeyDown={onQtyKeyDown}
+                className="w-24 min-w-[7.5rem] h-11 text-center"
+                title="Quantity"
+            />
 
-          <Button
-            type="button"
-            onClick={submitAdd}
-            disabled={addForm.processing}
-            className="h-11 px-6"
-          >
-            {addForm.processing ? "Adding..." : "Add"}
-          </Button>
+            <Button
+                type="button"
+                onClick={submitAdd}
+                disabled={addForm.processing}
+                className="h-11 px-6 flex-1 md:flex-none"
+            >
+                {addForm.processing ? "Adding..." : "Add"}
+            </Button>
+          </div>
         </div>
 
         {/* Optional Note */}

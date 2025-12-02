@@ -24,3 +24,4 @@ yarn-error.log
 # NativePHP / Electron build output
 nativephp/electron/dist/
 nativephp/electron/dist/*
+.env.desktop

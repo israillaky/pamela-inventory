@@ -48,25 +48,51 @@ $envPath = ".env"
 if (Test-Path $envPath) {
     Write-Host "Updating .env versions..." -ForegroundColor Yellow
 
-    $content = Get-Content $envPath
+    # Read full file, normalize line endings to `\n`, then split lines
+    $raw = [System.IO.File]::ReadAllText($envPath)
+    $raw = $raw -replace "`r`n", "`n"
+    $lines = $raw -split "`n"
 
-    if ($content -notmatch '^APP_VERSION=') {
-        $content += "APP_VERSION=$Version"
-    } else {
-        $content = $content -replace '^APP_VERSION=.*', "APP_VERSION=$Version"
+    # Helper to update or append a key=value line
+    function Set-Or-AddEnvLine {
+        param(
+            [string[]]$Lines,
+            [string]$Key,
+            [string]$Value
+        )
+
+        $pattern = "^$Key="
+        $index = $Lines.FindIndex({ $_ -match $pattern })
+
+        if ($index -ge 0) {
+            $Lines[$index] = "$Key=$Value"
+        } else {
+            $Lines += "$Key=$Value"
+        }
+
+        return ,$Lines
     }
 
-    if ($content -notmatch '^NATIVEPHP_APP_VERSION=') {
-        $content += "NATIVEPHP_APP_VERSION=$Version"
-    } else {
-        $content = $content -replace '^NATIVEPHP_APP_VERSION=.*', "NATIVEPHP_APP_VERSION=$Version"
-    }
+    # Add a helper on the array type
+    Update-TypeData -TypeName System.Object -MemberType ScriptMethod -MemberName FindIndex -Value {
+        param([scriptblock]$predicate)
+        for ($i = 0; $i -lt $this.Length; $i++) {
+            if (& $predicate $this[$i]) { return $i }
+        }
+        return -1
+    } -Force | Out-Null
 
-    $content | Set-Content $envPath -NoNewline
+    $lines = Set-Or-AddEnvLine -Lines $lines -Key "APP_VERSION" -Value $Version
+    $lines = Set-Or-AddEnvLine -Lines $lines -Key "NATIVEPHP_APP_VERSION" -Value $Version
+
+    # Join back with Windows line endings and write file
+    $outText = ($lines -join "`r`n") + "`r`n"
+    [System.IO.File]::WriteAllText($envPath, $outText, [System.Text.Encoding]::UTF8)
 }
 else {
     Write-Host ".env not found, skipping .env update." -ForegroundColor Red
 }
+
 
 # 6. Update package.json (if exists)
 $packagePath = "package.json"
