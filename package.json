@@ -1,6 +1,8 @@
 {
     "private": true,
     "type": "module",
+    "name": "pamela-inventory",
+    "version": "1.0.0",
     "scripts": {
         "build": "vite build",
         "dev": "vite"
